@@ -1870,7 +1870,8 @@ def run_active_quiz(quiz_data, quiz_id):
             with col3:
                 if st.button("❌ Quit Quiz"):
                     del st.session_state[f"quiz_state_{quiz_id}"]
-                    del st.session_state.current_quiz
+                    if 'current_quiz' in st.session_state:
+                        del st.session_state.current_quiz
                     st.experimental_rerun()
         
         else:
@@ -1939,7 +1940,8 @@ def run_active_quiz(quiz_data, quiz_id):
         
         with col2:
             if st.button("📚 Study This Topic"):
-                del st.session_state.current_quiz
+                if 'current_quiz' in st.session_state:
+                    del st.session_state.current_quiz
                 st.experimental_rerun()
 
 # ----------------------- Main App Entry Point ----------------------------
