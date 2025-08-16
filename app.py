@@ -11,7 +11,7 @@ import math
 from typing import Tuple, Dict, List
 import time
 from qiskit import QuantumCircuit, execute
-from qiskit.providers.aer import Aer # REPAIRED LINE
+from qiskit.providers.aer import Aer
 from plotly.subplots import make_subplots
 
 # -----------------------------------------------------------------------------
@@ -678,14 +678,14 @@ def entanglement_workshop():
     
     qc2 = QuantumCircuit(2)
     st.markdown("#### Quantum Circuit")
-    qc2.h(0)
-    qc2.cx(0, 1)
     st.code(qc2.draw('mpl')._repr_svg_())
     
     shots = st.slider("Number of measurements", 100, 2048, 1024)
     
     if st.button("🔬 Entangle & Measure", type="primary"):
         with st.spinner("Executing entanglement experiment..."):
+            qc2.h(0)
+            qc2.cx(0, 1)
             qc2.measure_all()
             simulator = Aer.get_backend('qasm_simulator')
             result = execute(qc2, simulator, shots=shots).result()
