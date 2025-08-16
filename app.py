@@ -20,6 +20,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# -------------------------------
+# Link to CognitiveCloud.ai
+# -------------------------------
+st.link_button("CognitiveCloud.ai Math Apps", "https://cognitivecloud-launcher.streamlit.app/#cognitive-cloud-ai-app-launcher")
+
 # Enhanced session state for the new features
 if 'xp' not in st.session_state:
     st.session_state.xp = 0
