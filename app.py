@@ -11,7 +11,7 @@ import math
 from typing import Tuple, Dict, List
 import time
 from qiskit import QuantumCircuit, execute
-from qiskit.providers.aer import Aer
+from qiskit.providers.aer import Aer # REPAIRED LINE
 from plotly.subplots import make_subplots
 
 # -----------------------------------------------------------------------------
