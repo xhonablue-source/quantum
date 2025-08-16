@@ -11,14 +11,6 @@ import math
 from typing import Tuple, Dict, List
 import time
 import random
-from qiskit import QuantumCircuit, execute
-from qiskit.providers.aer import Aer
-from plotly.subplots import make_subplots
-
-# -----------------------------------------------------------------------------
-# MathCraft: Quantum Quest — Enhanced Interactive Quantum Mechanics
-# Now with comprehensive tutoring system and quantum reward mechanics
-# -----------------------------------------------------------------------------
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -43,16 +35,8 @@ if 'quiz_scores' not in st.session_state:
     st.session_state.quiz_scores = {}
 if 'tutoring_progress' not in st.session_state:
     st.session_state.tutoring_progress = {}
-if 'interference_challenges' not in st.session_state:
-    st.session_state.interference_challenges = {
-        "max_constructive": False,
-        "max_destructive": False,
-        "half_prob": False
-    }
 if 'quantum_streak' not in st.session_state:
     st.session_state.quantum_streak = 0
-if 'last_activity_date' not in st.session_state:
-    st.session_state.last_activity_date = None
 if 'mastery_levels' not in st.session_state:
     st.session_state.mastery_levels = {
         'superposition': 0,
@@ -61,8 +45,16 @@ if 'mastery_levels' not in st.session_state:
         'measurement': 0,
         'interference': 0
     }
+if 'shop_inventory' not in st.session_state:
+    st.session_state.shop_inventory = {
+        'hint_booster': 0,
+        'xp_multiplier': 0,
+        'theme_dark': False,
+        'theme_neon': False,
+        'advanced_bloch': False
+    }
 
-# ----------------------- Enhanced Quantum Concepts ----------------------------
+# ----------------------- Core Quantum Functions ----------------------------
 
 def ket0() -> np.ndarray:
     return np.array([[1.0], [0.0]], dtype=complex)
@@ -148,7 +140,7 @@ def quantum_reward_calculation(base_xp: int, difficulty: str, streak_bonus: bool
     
     # Base rewards
     xp_reward = int(base_xp * multiplier)
-    coin_reward = int(base_xp * multiplier * 0.5)  # Coins are half XP value
+    coin_reward = int(base_xp * multiplier * 0.5)
     
     # Streak bonus
     if streak_bonus and st.session_state.quantum_streak >= 3:
@@ -209,7 +201,7 @@ def add_xp_enhanced(base_points: int, reason: str = "", difficulty: str = 'easy'
         st.session_state.current_level = new_level
         st.balloons()
         st.success(f"🎉 Level Up! You're now Level {new_level}!")
-        st.session_state.quantum_coins += new_level * 10  # Level up bonus
+        st.session_state.quantum_coins += new_level * 10
 
 def create_bloch_sphere(x: float, y: float, z: float, title: str = "Qubit State on Bloch Sphere") -> go.Figure:
     u = np.linspace(0, 2 * np.pi, 50)
@@ -233,10 +225,12 @@ def create_bloch_sphere(x: float, y: float, z: float, title: str = "Qubit State 
         name='|ψ⟩'
     ))
     
-    fig.add_trace(go.Scatter3d(x=[-1.2, 1.2], y=[0, 0], z=[0, 0], mode='lines', line=dict(color='black', width=2), name='X-axis', showlegend=False))
-    fig.add_trace(go.Scatter3d(x=[0, 0], y=[-1.2, 1.2], z=[0, 0], mode='lines', line=dict(color='black', width=2), name='Y-axis', showlegend=False))
-    fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, 0], z=[-1.2, 1.2], mode='lines', line=dict(color='black', width=2), name='Z-axis', showlegend=False))
+    # Axes
+    fig.add_trace(go.Scatter3d(x=[-1.2, 1.2], y=[0, 0], z=[0, 0], mode='lines', line=dict(color='black', width=2), showlegend=False))
+    fig.add_trace(go.Scatter3d(x=[0, 0], y=[-1.2, 1.2], z=[0, 0], mode='lines', line=dict(color='black', width=2), showlegend=False))
+    fig.add_trace(go.Scatter3d(x=[0, 0], y=[0, 0], z=[-1.2, 1.2], mode='lines', line=dict(color='black', width=2), showlegend=False))
     
+    # Labels
     fig.add_trace(go.Scatter3d(x=[1.3], y=[0], z=[0], mode='text', text=['X'], textfont=dict(size=14, color='black'), showlegend=False))
     fig.add_trace(go.Scatter3d(x=[0], y=[1.3], z=[0], mode='text', text=['Y'], textfont=dict(size=14, color='black'), showlegend=False))
     fig.add_trace(go.Scatter3d(x=[0], y=[0], z=[1.3], mode='text', text=['|0⟩'], textfont=dict(size=14, color='blue'), showlegend=False))
@@ -280,7 +274,7 @@ class QuantumTutor:
                 - |α|² + |β|² = 1 (normalization condition)
                 
                 **Physical Intuition:**
-                Think of a spinning coin in the air - before it lands, it's neither heads nor tails, but both! Measurement is like catching the coin.
+                Think of a spinning coin in the air - before it lands, it's neither heads nor tails, but both!
                 """,
                 'examples': [
                     "Equal superposition: |+⟩ = (|0⟩ + |1⟩)/√2 - 50% chance each",
@@ -288,8 +282,7 @@ class QuantumTutor:
                 ],
                 'common_mistakes': [
                     "❌ Thinking the qubit 'chooses' a state before measurement",
-                    "❌ Confusing probability amplitudes with probabilities",
-                    "❌ Forgetting about the normalization condition"
+                    "❌ Confusing probability amplitudes with probabilities"
                 ]
             },
             'gates': {
@@ -298,24 +291,21 @@ class QuantumTutor:
                 'detailed': """
                 **Key Properties:**
                 - Quantum gates are reversible (unitary operations)
-                - They preserve the total probability (|α|² + |β|² = 1)
+                - They preserve the total probability
                 - Gates can create, manipulate, or destroy superposition
                 
                 **Common Gates:**
                 - **X Gate**: Quantum NOT - flips |0⟩ ↔ |1⟩
                 - **H Gate**: Hadamard - creates superposition from basis states
                 - **Z Gate**: Phase flip - adds minus sign to |1⟩ state
-                - **CNOT**: Two-qubit gate for creating entanglement
                 """,
                 'examples': [
                     "H|0⟩ = (|0⟩ + |1⟩)/√2 - creates equal superposition",
-                    "X|0⟩ = |1⟩ - classical bit flip",
-                    "HH|0⟩ = |0⟩ - two Hadamards cancel out"
+                    "X|0⟩ = |1⟩ - classical bit flip"
                 ],
                 'common_mistakes': [
                     "❌ Thinking gates 'measure' the qubit",
-                    "❌ Forgetting gates are matrix operations",
-                    "❌ Not considering the order of gate operations"
+                    "❌ Forgetting gates are matrix operations"
                 ]
             },
             'measurement': {
@@ -331,43 +321,35 @@ class QuantumTutor:
                 - Measurement is probabilistic
                 - It destroys superposition (irreversible)
                 - Repeated measurements give the same result
-                - You cannot predict individual outcomes, only probabilities
                 """,
                 'examples': [
                     "Measuring |+⟩ gives |0⟩ or |1⟩ with 50% chance each",
-                    "Measuring |0⟩ always gives |0⟩ (100% probability)",
-                    "After measuring, the qubit is in the measured state"
+                    "Measuring |0⟩ always gives |0⟩ (100% probability)"
                 ],
                 'common_mistakes': [
                     "❌ Thinking you can measure without disturbing the system",
-                    "❌ Confusing probability amplitudes with probabilities",
                     "❌ Expecting deterministic outcomes from superposition states"
                 ]
             },
             'entanglement': {
                 'title': '🔗 Quantum Entanglement',
-                'simple': "When qubits become entangled, they're connected in a spooky way - measuring one instantly affects the other, no matter how far apart they are!",
+                'simple': "When qubits become entangled, they're connected in a spooky way - measuring one instantly affects the other!",
                 'detailed': """
                 **Bell States (Maximally Entangled):**
                 - |Φ⁺⟩ = (|00⟩ + |11⟩)/√2 - both qubits always agree
-                - |Φ⁻⟩ = (|00⟩ - |11⟩)/√2 - both qubits always agree (with phase)
                 - |Ψ⁺⟩ = (|01⟩ + |10⟩)/√2 - qubits always disagree
-                - |Ψ⁻⟩ = (|01⟩ - |10⟩)/√2 - qubits always disagree (with phase)
                 
                 **Properties:**
                 - Cannot be written as a product of individual qubit states
                 - Measuring one qubit instantly determines the other's state
-                - The foundation of quantum computing's power
                 """,
                 'examples': [
                     "In |Φ⁺⟩: If first qubit measures |0⟩, second is definitely |0⟩",
-                    "In |Ψ⁺⟩: If first qubit measures |0⟩, second is definitely |1⟩",
-                    "Entanglement enables quantum teleportation and cryptography"
+                    "In |Ψ⁺⟩: If first qubit measures |0⟩, second is definitely |1⟩"
                 ],
                 'common_mistakes': [
                     "❌ Thinking entanglement allows faster-than-light communication",
-                    "❌ Confusing correlation with causation",
-                    "❌ Not understanding non-locality vs. non-communication"
+                    "❌ Confusing correlation with causation"
                 ]
             }
         }
@@ -454,487 +436,470 @@ def show_concept_tutor(concept: str):
     hint = QuantumTutor.adaptive_hint(concept, user_level)
     st.success(f"💡 **Hint:** {hint}")
 
-# ----------------------- Enhanced Quiz System ----------------------------
+# ----------------------- Quiz System ----------------------------
 
-class EnhancedQuizSystem:
-    """Comprehensive quiz system with multiple question types and adaptive difficulty"""
+def run_simple_quiz():
+    """Simplified quiz system"""
+    st.header("🧠 Quantum Quiz Center")
     
-    @staticmethod
-    def get_quiz_questions():
-        return {
-            'superposition_basics': {
-                'difficulty': 'easy',
-                'concept': 'superposition',
-                'questions': [
-                    {
-                        'question': "What does the Hadamard gate do to a |0⟩ qubit?",
-                        'options': ["Flips it to |1⟩", "Creates an equal superposition", "Measures it", "Does nothing"],
-                        'correct': 1,
-                        'explanation': "The Hadamard gate creates an equal superposition: H|0⟩ = (|0⟩ + |1⟩)/√2"
-                    },
-                    {
-                        'question': "In the state |ψ⟩ = 0.6|0⟩ + 0.8|1⟩, what's the probability of measuring |0⟩?",
-                        'options': ["0.6", "0.36", "0.8", "0.5"],
-                        'correct': 1,
-                        'explanation': "Probability = |amplitude|². So P(|0⟩) = |0.6|² = 0.36"
-                    },
-                    {
-                        'question': "Can a qubit be in a state (|0⟩ + |1⟩ + |2⟩)/√3?",
-                        'options': ["Yes, this is valid", "No, qubits only have 2 states", "Yes, but only with measurement", "Only in quantum computers"],
-                        'correct': 1,
-                        'explanation': "Qubits have only two basis states: |0⟩ and |1⟩. A |2⟩ state doesn't exist for qubits."
-                    }
-                ]
-            },
-            'quantum_gates': {
-                'difficulty': 'medium',
-                'concept': 'gates',
-                'questions': [
-                    {
-                        'question': "What happens when you apply two Hadamard gates to |0⟩ (i.e., HH|0⟩)?",
-                        'options': ["You get |1⟩", "You get |0⟩", "You get (|0⟩ + |1⟩)/√2", "The state becomes undefined"],
-                        'correct': 1,
-                        'explanation': "H is its own inverse: HH = I. So HH|0⟩ = I|0⟩ = |0⟩"
-                    },
-                    {
-                        'question': "Which gate adds a phase of -1 to the |1⟩ state while leaving |0⟩ unchanged?",
-                        'options': ["X gate", "Y gate", "Z gate", "H gate"],
-                        'correct': 2,
-                        'explanation': "The Z gate does: Z|0⟩ = |0⟩ and Z|1⟩ = -|1⟩"
-                    },
-                    {
-                        'question': "What's special about quantum gates compared to classical logic gates?",
-                        'options': ["They're faster", "They're reversible", "They use less energy", "They work on superposition"],
-                        'correct': 3,
-                        'explanation': "Quantum gates work on superposition states and preserve quantum information, unlike classical gates."
-                    }
-                ]
-            },
-            'measurement_theory': {
-                'difficulty': 'medium',
-                'concept': 'measurement',
-                'questions': [
-                    {
-                        'question': "After measuring a qubit in superposition, what happens to the state?",
-                        'options': ["It stays in superposition", "It collapses to a definite state", "It becomes entangled", "It disappears"],
-                        'correct': 1,
-                        'explanation': "Measurement causes wavefunction collapse - the superposition is destroyed and the qubit is in a definite state."
-                    },
-                    {
-                        'question': "You measure the state (|0⟩ + i|1⟩)/√2 in the computational basis. What are the probabilities?",
-                        'options': ["P(0)=1, P(1)=0", "P(0)=0.5, P(1)=0.5", "P(0)=0, P(1)=1", "P(0)=i, P(1)=1"],
-                        'correct': 1,
-                        'explanation': "P(0) = |1/√2|² = 0.5, P(1) = |i/√2|² = 0.5. The phase doesn't affect measurement probabilities."
-                    }
-                ]
-            },
-            'entanglement_advanced': {
-                'difficulty': 'hard',
-                'concept': 'entanglement',
-                'questions': [
-                    {
-                        'question': "Which Bell state represents (|00⟩ + |11⟩)/√2?",
-                        'options': ["|Φ⁺⟩", "|Φ⁻⟩", "|Ψ⁺⟩", "|Ψ⁻⟩"],
-                        'correct': 0,
-                        'explanation': "|Φ⁺⟩ = (|00⟩ + |11⟩)/√2 is the classic Bell state where both qubits are always correlated."
-                    },
-                    {
-                        'question': "If you measure the first qubit of |Ψ⁺⟩ = (|01⟩ + |10⟩)/√2 and get |0⟩, what's the state of the second qubit?",
-                        'options': ["|0⟩", "|1⟩", "(|0⟩ + |1⟩)/√2", "Cannot be determined"],
-                        'correct': 1,
-                        'explanation': "In |Ψ⁺⟩, the qubits are anticorrelated. If first is |0⟩, second must be |1⟩."
-                    }
-                ]
-            }
+    # Quiz questions
+    quiz_questions = [
+        {
+            'question': "What does the Hadamard gate do to a |0⟩ qubit?",
+            'options': ["Flips it to |1⟩", "Creates an equal superposition", "Measures it", "Does nothing"],
+            'correct': 1,
+            'explanation': "The Hadamard gate creates an equal superposition: H|0⟩ = (|0⟩ + |1⟩)/√2",
+            'difficulty': 'easy'
+        },
+        {
+            'question': "In the state |ψ⟩ = 0.6|0⟩ + 0.8|1⟩, what's the probability of measuring |0⟩?",
+            'options': ["0.6", "0.36", "0.8", "0.5"],
+            'correct': 1,
+            'explanation': "Probability = |amplitude|². So P(|0⟩) = |0.6|² = 0.36",
+            'difficulty': 'medium'
+        },
+        {
+            'question': "Which gate adds a phase of -1 to the |1⟩ state?",
+            'options': ["X gate", "Y gate", "Z gate", "H gate"],
+            'correct': 2,
+            'explanation': "The Z gate does: Z|0⟩ = |0⟩ and Z|1⟩ = -|1⟩",
+            'difficulty': 'medium'
+        },
+        {
+            'question': "What happens to a qubit in superposition when measured?",
+            'options': ["It stays in superposition", "It collapses to a definite state", "It becomes entangled", "It disappears"],
+            'correct': 1,
+            'explanation': "Measurement causes the superposition to collapse into one of the basis states.",
+            'difficulty': 'easy'
+        },
+        {
+            'question': "Which Bell state represents (|00⟩ + |11⟩)/√2?",
+            'options': ["|Φ⁺⟩", "|Φ⁻⟩", "|Ψ⁺⟩", "|Ψ⁻⟩"],
+            'correct': 0,
+            'explanation': "|Φ⁺⟩ = (|00⟩ + |11⟩)/√2 is the classic Bell state where both qubits are correlated.",
+            'difficulty': 'hard'
         }
-
-def run_enhanced_quiz():
-    """Enhanced quiz interface with adaptive difficulty and detailed feedback"""
+    ]
     
-    st.header("🧠 Enhanced Quantum Quiz System")
+    # Initialize quiz state
+    if 'current_quiz_q' not in st.session_state:
+        st.session_state.current_quiz_q = 0
+        st.session_state.quiz_score = 0
+        st.session_state.quiz_completed = False
     
-    quiz_data = EnhancedQuizSystem.get_quiz_questions()
-    
-    # Quiz selection
-    quiz_name = st.selectbox(
-        "Choose a quiz topic:",
-        list(quiz_data.keys()),
-        format_func=lambda x: x.replace('_', ' ').title()
-    )
-    
-    selected_quiz = quiz_data[quiz_name]
-    
-    # Show concept tutorial first
-    if st.expander(f"📚 Learn about {selected_quiz['concept'].title()} first"):
-        show_concept_tutor(selected_quiz['concept'])
-    
-    st.markdown(f"**Difficulty:** {selected_quiz['difficulty'].title()}")
-    st.markdown(f"**Questions:** {len(selected_quiz['questions'])}")
-    
-    if f"quiz_{quiz_name}" not in st.session_state:
-        st.session_state[f"quiz_{quiz_name}"] = {
-            'current_question': 0,
-            'score': 0,
-            'answers': [],
-            'completed': False
-        }
-    
-    quiz_state = st.session_state[f"quiz_{quiz_name}"]
-    questions = selected_quiz['questions']
-    
-    if not quiz_state['completed']:
-        current_q = quiz_state['current_question']
+    if not st.session_state.quiz_completed:
+        current_q = st.session_state.current_quiz_q
         
-        if current_q < len(questions):
-            question_data = questions[current_q]
+        if current_q < len(quiz_questions):
+            question = quiz_questions[current_q]
             
-            st.subheader(f"Question {current_q + 1} of {len(questions)}")
-            st.markdown(f"**{question_data['question']}**")
+            # Progress
+            progress = (current_q + 1) / len(quiz_questions)
+            st.progress(progress)
+            st.markdown(f"**Question {current_q + 1} of {len(quiz_questions)}**")
             
-            # Display options
+            # Question
+            st.markdown(f"### {question['question']}")
+            
+            # Options
             answer = st.radio(
                 "Choose your answer:",
-                question_data['options'],
-                key=f"q_{quiz_name}_{current_q}"
+                question['options'],
+                key=f"quiz_q_{current_q}"
             )
             
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                if st.button("Submit Answer", type="primary"):
-                    selected_challenge = st.selectbox("Choose a challenge:", challenges, format_func=lambda x: x['name'])
-        
-        st.markdown(f"**Challenge:** {selected_challenge['description']}")
-        st.markdown(f"**Starting state:** {selected_challenge['initial_state']}")
-        st.markdown(f"**Target:** {selected_challenge['expected']}")
-        
-        # Let user build the solution
-        if selected_challenge['gates'] == ["?"]:
-            user_gate = st.selectbox("Choose your gate:", ["X", "H", "Z", "Y"])
-            
-            if st.button("Test Solution"):
-                if selected_challenge['name'] == "Create |1⟩" and user_gate == "X":
-                    st.success("🎉 Correct! X gate flips |0⟩ to |1⟩")
-                    add_xp_enhanced(20, "Solved gate challenge!", 'medium', True)
-                elif selected_challenge['name'] == "Superposition Creation" and user_gate == "H":
-                    st.success("🎉 Correct! Hadamard creates superposition!")
-                    add_xp_enhanced(20, "Solved gate challenge!", 'medium', True)
+            if st.button("Submit Answer", type="primary"):
+                is_correct = question['options'].index(answer) == question['correct']
+                
+                if is_correct:
+                    st.session_state.quiz_score += 1
+                    st.success("✅ Correct!")
+                    add_xp_enhanced(20, "Correct answer!", question['difficulty'], True)
                 else:
-                    st.error("❌ Not quite right. Think about what each gate does!")
-                    add_xp_enhanced(5, "Keep trying!", 'medium', False)
-    
-    # Circuit builder mode
-    else:  # Circuit Builder
-        st.subheader("Quantum Circuit Builder")
-        
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            st.subheader("1. Choose Initial State")
-            init_state = st.selectbox("Starting state:", ["|0⟩", "|1⟩", "|+⟩ = (|0⟩+|1⟩)/√2", "|-⟩ = (|0⟩-|1⟩)/√2"])
-            
-            if init_state == "|0⟩":
-                state = ket0()
-            elif init_state == "|1⟩":
-                state = ket1()
-            elif init_state == "|+⟩ = (|0⟩+|1⟩)/√2":
-                state = apply(H, ket0())
-            else:
-                state = apply(H, ket1())
-            
-            st.subheader("2. Build Your Circuit")
-            
-            # Gate sequence builder
-            if 'gate_sequence' not in st.session_state:
-                st.session_state.gate_sequence = []
-            
-            col_add, col_clear = st.columns(2)
-            
-            with col_add:
-                new_gate = st.selectbox("Add gate:", ["X", "Y", "Z", "H", "Rx", "Ry", "Rz", "Phase"])
+                    st.error("❌ Incorrect")
+                    correct_answer = question['options'][question['correct']]
+                    st.info(f"Correct answer: {correct_answer}")
+                    add_xp_enhanced(5, "Keep learning!", question['difficulty'], False)
                 
-                if new_gate in ["Rx", "Ry", "Rz", "Phase"]:
-                    angle = st.slider(f"{new_gate} angle (radians)", 0.0, 2*np.pi, np.pi/2, 0.1)
-                    gate_label = f"{new_gate}({angle:.2f})"
+                st.info(f"💡 {question['explanation']}")
+                st.session_state.current_quiz_q += 1
+                
+                time.sleep(2)
+                st.experimental_rerun()
+        else:
+            st.session_state.quiz_completed = True
+            st.experimental_rerun()
+    
+    else:
+        # Show results
+        st.success("🎉 Quiz Completed!")
+        
+        score = st.session_state.quiz_score
+        total = len(quiz_questions)
+        percentage = (score / total) * 100
+        
+        st.metric("Final Score", f"{score}/{total} ({percentage:.1f}%)")
+        
+        if percentage >= 80:
+            st.success("🌟 Excellent work!")
+            if "Quiz Master" not in st.session_state.achievements:
+                st.session_state.achievements.append("Quiz Master")
+        elif percentage >= 60:
+            st.info("👍 Good job!")
+        else:
+            st.warning("📚 Keep studying!")
+        
+        if st.button("🔄 Take Quiz Again"):
+            st.session_state.current_quiz_q = 0
+            st.session_state.quiz_score = 0
+            st.session_state.quiz_completed = False
+            st.experimental_rerun()
+
+# ----------------------- Main Modules ----------------------------
+
+def story_mode_enhanced():
+    st.header("Episode 1: The Mysterious Q-Box Enhanced")
+    
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.markdown("""
+        ### 📖 The Enhanced Discovery
+        
+        In the dusty attic of an old physics laboratory, you discover a peculiar device labeled **Q-BOX 2.0**. 
+        This isn't just any quantum device - it's equipped with an AI tutor and advanced quantum mechanics!
+        
+        A glowing holographic note appears:
+        
+        > *"Welcome, quantum explorer! This enhanced Q-Box will guide you through the mysteries of quantum mechanics.
+        > Complete challenges, earn quantum coins, and unlock the deepest secrets of the quantum realm."*
+        
+        Your enhanced quantum journey begins now! 🚀
+        """)
+        
+        st.markdown("### 🎯 Mission: Create the Hadamard State")
+        st.info("Target: Prepare the state (|0⟩ + |1⟩)/√2 with equal probability of measuring 0 or 1")
+        
+        theta = st.slider("🔄 Rotation around Y-axis (θ)", 0.0, float(np.pi), value=float(np.pi/2), step=0.01)
+        phi = st.slider("🌀 Phase rotation around Z-axis (φ)", 0.0, float(2*np.pi), value=0.0, step=0.01)
+        
+        state = apply(Ry(theta), ket0())
+        state = apply(Rz(phi), state)
+        probs = measure_probs(state)
+        
+        st.markdown("### Current Quantum State")
+        st.code(f"|ψ⟩ = {cfmt(state[0,0])}|0⟩ + {cfmt(state[1,0])}|1⟩")
+        
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.metric("P(|0⟩)", f"{probs['0']:.3f}")
+        with col_b:
+            st.metric("P(|1⟩)", f"{probs['1']:.3f}")
+        
+        trials = st.number_input("Number of measurements", min_value=10, max_value=1000, value=100, step=10)
+        
+        if st.button("🎲 Run Quantum Measurements", type="primary"):
+            with st.spinner("Measuring quantum state..."):
+                time.sleep(0.5)
+                results = [sample_measure(state) for _ in range(int(trials))]
+                p0_observed = results.count("0") / len(results)
+                p1_observed = 1 - p0_observed
+                
+                st.success(f"📊 Results: |0⟩ → {p0_observed:.3f}, |1⟩ → {p1_observed:.3f}")
+                
+                if abs(p0_observed - 0.5) < 0.1 and abs(p1_observed - 0.5) < 0.1:
+                    add_xp_enhanced(25, "Successfully created superposition state!", 'medium', True)
+                    if "Hadamard Master" not in st.session_state.achievements:
+                        st.session_state.achievements.append("Hadamard Master")
+                        st.balloons()
                 else:
-                    angle = None
-                    gate_label = new_gate
-                
-                if st.button("Add Gate"):
-                    st.session_state.gate_sequence.append((new_gate, angle, gate_label))
-            
-            with col_clear:
-                if st.button("Clear Circuit"):
-                    st.session_state.gate_sequence = []
-            
-            # Display current circuit
-            if st.session_state.gate_sequence:
-                circuit_display = " → ".join([gate[2] for gate in st.session_state.gate_sequence])
-                st.markdown(f"**Current circuit:** {init_state} → {circuit_display}")
-            else:
-                st.markdown(f"**Current circuit:** {init_state}")
-            
-            # Apply gates and show result
-            final_state = state.copy()
-            for gate_info in st.session_state.gate_sequence:
-                gate_name, angle, _ = gate_info
-                
-                if gate_name == "X":
-                    final_state = apply(X, final_state)
-                elif gate_name == "Y":
-                    final_state = apply(Y, final_state)
-                elif gate_name == "Z":
-                    final_state = apply(Z, final_state)
-                elif gate_name == "H":
-                    final_state = apply(H, final_state)
-                elif gate_name == "Rx":
-                    final_state = apply(Rx(angle), final_state)
-                elif gate_name == "Ry":
-                    final_state = apply(Ry(angle), final_state)
-                elif gate_name == "Rz":
-                    final_state = apply(Rz(angle), final_state)
-                elif gate_name == "Phase":
-                    final_state = apply(phase(angle), final_state)
-            
-            st.subheader("3. Results")
-            
-            col_init, col_arrow, col_final = st.columns([2, 1, 2])
-            
-            with col_init:
-                st.markdown("**Initial State:**")
-                st.code(f"{init_state}")
-                init_probs = measure_probs(state)
-                st.write(f"P(0) = {init_probs['0']:.3f}")
-                st.write(f"P(1) = {init_probs['1']:.3f}")
-            
-            with col_arrow:
-                st.markdown("# ➡️")
-            
-            with col_final:
-                st.markdown("**Final State:**")
-                st.code(f"|ψ⟩ = {cfmt(final_state[0,0])}|0⟩ + {cfmt(final_state[1,0])}|1⟩")
-                final_probs = measure_probs(final_state)
-                st.write(f"P(0) = {final_probs['0']:.3f}")
-                st.write(f"P(1) = {final_probs['1']:.3f}")
-            
-            # Circuit simulation button
-            if st.button("🎯 Simulate Circuit", type="primary"):
-                add_xp_enhanced(15, "Simulated quantum circuit!", 'medium', True)
-                st.success("Circuit simulation completed!")
-        
-        with col2:
-            x, y, z = bloch_coords(final_state)
-            fig = create_bloch_sphere(x, y, z, "Final State on Bloch Sphere")
-            st.plotly_chart(fig, use_container_width=True)
-            
-            st.subheader("🧠 Gate Reference")
-            with st.expander("Quick Gate Guide"):
-                st.markdown("""
-                - **X**: Bit flip (|0⟩ ↔ |1⟩)
-                - **H**: Creates superposition
-                - **Z**: Phase flip (adds minus to |1⟩)
-                - **Rx/Ry/Rz**: Rotation around X/Y/Z axis
-                - **Phase**: Adds phase to |1⟩ state
-                """)
-
-# ----------------------- Enhanced Quiz Center ----------------------------
-
-def enhanced_quiz_center():
-    st.header("🧠 Enhanced Quantum Quiz Center")
-    st.markdown("Test your quantum knowledge with adaptive quizzes and instant feedback!")
+                    add_xp_enhanced(8, "Good attempt! Try adjusting θ to π/2 for perfect superposition.", 'easy', False)
     
-    # Quiz selection with difficulty indicators
+    with col2:
+        st.markdown("### 🧠 Enhanced Quantum Concepts")
+        
+        # AI Tutor integration
+        if st.button("🎓 Ask AI Tutor"):
+            show_concept_tutor('superposition')
+        
+        st.markdown("""
+        **Superposition**: A qubit can exist in a combination of |0⟩ and |1⟩ states simultaneously.
+        
+        **Measurement**: Collapses the superposition, giving either |0⟩ or |1⟩ with probabilities |α|² and |β|².
+        
+        **Phase**: The relative phase between states affects interference but not individual measurement probabilities.
+        """)
+        
+        x, y, z = bloch_coords(state)
+        fig = create_bloch_sphere(x, y, z, "Your Qubit State")
+        st.plotly_chart(fig, use_container_width=True)
+
+def ai_quantum_tutor():
+    st.header("🎓 AI Quantum Tutor")
+    st.markdown("Your personal AI assistant for mastering quantum mechanics!")
+    
+    # Concept selection
+    st.subheader("📚 Choose a Concept to Learn")
+    
+    concepts = ['superposition', 'gates', 'measurement', 'entanglement']
+    concept_names = ['Superposition', 'Quantum Gates', 'Measurement', 'Entanglement']
+    
+    selected_concept = st.selectbox(
+        "What would you like to learn about?",
+        concepts,
+        format_func=lambda x: concept_names[concepts.index(x)]
+    )
+    
+    # Show mastery level
+    mastery = st.session_state.mastery_levels.get(selected_concept, 0)
+    st.markdown(f"**Your current mastery level:** {'⭐' * mastery}{'☆' * (3 - mastery)}")
+    
+    # Interactive tutor
+    show_concept_tutor(selected_concept)
+    
+    # Practice recommendations
+    st.subheader("🎯 Recommended Practice")
+    
+    if mastery == 0:
+        st.info("Start with the basic quizzes and simple lab exercises!")
+    elif mastery == 1:
+        st.info("Try intermediate challenges and explore the advanced lab features!")
+    elif mastery == 2:
+        st.info("You're almost there! Tackle the hardest challenges to achieve mastery!")
+    else:
+        st.success("🌟 You've mastered this concept! Help others or explore advanced topics!")
+
+def superposition_lab_enhanced():
+    st.header("🧪 Enhanced Superposition Laboratory")
+    st.markdown("Craft custom quantum states with AI guidance and advanced features")
+    
+    col1, col2 = st.columns([3, 2])
+    
+    with col1:
+        st.subheader("State Designer")
+        
+        st.markdown("**α coefficient (for |0⟩):**")
+        col_a1, col_a2 = st.columns(2)
+        with col_a1:
+            a_real = st.slider("Real(α)", -1.0, 1.0, 1.0, 0.01)
+        with col_a2:
+            a_imag = st.slider("Imag(α)", -1.0, 1.0, 0.0, 0.01)
+        
+        st.markdown("**β coefficient (for |1⟩):**")
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            b_real = st.slider("Real(β)", -1.0, 1.0, 0.0, 0.01)
+        with col_b2:
+            b_imag = st.slider("Imag(β)", -1.0, 1.0, 0.0, 0.01)
+        
+        psi = np.array([[a_real + 1j*a_imag], [b_real + 1j*b_imag]], dtype=complex)
+        psi = normalize(psi)
+        
+        st.markdown("### Normalized Quantum State")
+        st.code(f"|ψ⟩ = {cfmt(psi[0,0])}|0⟩ + {cfmt(psi[1,0])}|1⟩")
+        
+        probs = measure_probs(psi)
+        col_p1, col_p2 = st.columns(2)
+        with col_p1:
+            st.metric("P(|0⟩)", f"{probs['0']:.4f}")
+        with col_p2:
+            st.metric("P(|1⟩)", f"{probs['1']:.4f}")
+        
+        nshots = st.number_input("Number of measurements", 10, 2000, 500, 50)
+        
+        if st.button("🎲 Perform Measurements", type="primary"):
+            with st.spinner("Running quantum measurements..."):
+                results = [sample_measure(psi) for _ in range(int(nshots))]
+                df = pd.DataFrame({'Outcome': results})
+                counts = df['Outcome'].value_counts(normalize=True).sort_index()
+                
+                fig_hist = px.bar(
+                    x=counts.index,
+                    y=counts.values,
+                    labels={'x': 'Measurement Outcome', 'y': 'Probability'},
+                    title="Measurement Results"
+                )
+                fig_hist.update_traces(marker_color=['lightblue', 'lightcoral'])
+                st.plotly_chart(fig_hist, use_container_width=True)
+                
+                add_xp_enhanced(12, "Superposition experiment completed!", 'easy', True)
+    
+    with col2:
+        st.subheader("Visualization")
+        x, y, z = bloch_coords(psi)
+        fig = create_bloch_sphere(x, y, z)
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.subheader("🎯 Challenges")
+        st.markdown("""
+        1. Create a state with **75%** chance of |0⟩
+        2. Make a state on the **X-Y plane** (z=0)
+        3. Create the state **(|0⟩ - i|1⟩)/√2**
+        """)
+
+def quantum_gates_workshop_enhanced():
+    st.header("⚙️ Enhanced Quantum Gates Workshop")
+    st.markdown("Master quantum gates with interactive tutorials")
+    
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        quiz_categories = {
-            'Fundamentals': {
-                'superposition_basics': ('Superposition Basics', 'easy', '🌱'),
-                'measurement_intro': ('Measurement Introduction', 'easy', '🌱'),
-            },
-            'Intermediate': {
-                'quantum_gates': ('Quantum Gates', 'medium', '🔬'),
-                'bloch_sphere': ('Bloch Sphere', 'medium', '🔬'),
-            },
-            'Advanced': {
-                'entanglement_advanced': ('Advanced Entanglement', 'hard', '🎓'),
-                'quantum_algorithms': ('Quantum Algorithms', 'hard', '🎓'),
-            }
-        }
+        st.subheader("1. Choose Initial State")
+        init_state = st.selectbox("Starting state:", ["|0⟩", "|1⟩", "|+⟩ = (|0⟩+|1⟩)/√2", "|-⟩ = (|0⟩-|1⟩)/√2"])
         
-        st.subheader("📚 Choose Your Quiz")
+        if init_state == "|0⟩":
+            state = ket0()
+        elif init_state == "|1⟩":
+            state = ket1()
+        elif init_state == "|+⟩ = (|0⟩+|1⟩)/√2":
+            state = apply(H, ket0())
+        else:
+            state = apply(H, ket1())
         
-        for category, quizzes in quiz_categories.items():
-            with st.expander(f"{category} Quizzes"):
-                for quiz_id, (name, difficulty, icon) in quizzes.items():
-                    col_quiz, col_diff, col_button = st.columns([3, 1, 1])
-                    
-                    with col_quiz:
-                        st.markdown(f"**{icon} {name}**")
-                    
-                    with col_diff:
-                        difficulty_colors = {'easy': '🟢', 'medium': '🟡', 'hard': '🔴'}
-                        st.markdown(f"{difficulty_colors[difficulty]} {difficulty.title()}")
-                    
-                    with col_button:
-                        if st.button(f"Start", key=f"start_{quiz_id}"):
-                            st.session_state.selected_quiz = quiz_id
+        st.subheader("2. Apply Quantum Gates")
         
-        # Run selected quiz
-        if 'selected_quiz' in st.session_state:
-            run_enhanced_quiz()
+        gate_sequence = []
+        
+        col_g1, col_g2 = st.columns(2)
+        with col_g1:
+            pauli_gate = st.selectbox("Pauli Gates:", ["None", "X (NOT)", "Y", "Z"])
+            if pauli_gate != "None":
+                gate_sequence.append(pauli_gate)
+        
+        with col_g2:
+            had_gate = st.checkbox("Apply Hadamard (H)")
+            if had_gate:
+                gate_sequence.append("H")
+        
+        st.markdown("**Rotation Gates:**")
+        col_r1, col_r2, col_r3 = st.columns(3)
+        
+        with col_r1:
+            rx_angle = st.slider("Rx rotation (radians)", 0.0, 2*np.pi, 0.0, 0.1)
+            if rx_angle != 0:
+                gate_sequence.append(f"Rx({rx_angle:.2f})")
+        
+        with col_r2:
+            ry_angle = st.slider("Ry rotation (radians)", 0.0, 2*np.pi, 0.0, 0.1)
+            if ry_angle != 0:
+                gate_sequence.append(f"Ry({ry_angle:.2f})")
+        
+        with col_r3:
+            rz_angle = st.slider("Rz rotation (radians)", 0.0, 2*np.pi, 0.0, 0.1)
+            if rz_angle != 0:
+                gate_sequence.append(f"Rz({rz_angle:.2f})")
+        
+        phase_angle = st.slider("Phase gate φ", 0.0, 2*np.pi, 0.0, 0.1)
+        if phase_angle != 0:
+            gate_sequence.append(f"Phase({phase_angle:.2f})")
+        
+        final_state = state.copy()
+        for gate in gate_sequence:
+            if gate == "X (NOT)":
+                final_state = apply(X, final_state)
+            elif gate == "Y":
+                final_state = apply(Y, final_state)
+            elif gate == "Z":
+                final_state = apply(Z, final_state)
+            elif gate == "H":
+                final_state = apply(H, final_state)
+            elif gate.startswith("Rx"):
+                final_state = apply(Rx(rx_angle), final_state)
+            elif gate.startswith("Ry"):
+                final_state = apply(Ry(ry_angle), final_state)
+            elif gate.startswith("Rz"):
+                final_state = apply(Rz(rz_angle), final_state)
+            elif gate.startswith("Phase"):
+                final_state = apply(phase(phase_angle), final_state)
+        
+        st.subheader("3. Results")
+        
+        if gate_sequence:
+            st.markdown(f"**Applied Gates:** {' → '.join(gate_sequence)}")
+        else:
+            st.markdown("**No gates applied**")
+        
+        col_init, col_arrow, col_final = st.columns([2, 1, 2])
+        
+        with col_init:
+            st.markdown("**Initial State:**")
+            st.code(f"{init_state}")
+            init_probs = measure_probs(state)
+            st.write(f"P(0) = {init_probs['0']:.3f}")
+            st.write(f"P(1) = {init_probs['1']:.3f}")
+        
+        with col_arrow:
+            st.markdown("# ➡️")
+        
+        with col_final:
+            st.markdown("**Final State:**")
+            st.code(f"|ψ⟩ = {cfmt(final_state[0,0])}|0⟩ + {cfmt(final_state[1,0])}|1⟩")
+            final_probs = measure_probs(final_state)
+            st.write(f"P(0) = {final_probs['0']:.3f}")
+            st.write(f"P(1) = {final_probs['1']:.3f}")
+        
+        if st.button("🎯 Simulate Circuit", type="primary"):
+            add_xp_enhanced(15, "Simulated quantum circuit!", 'medium', True)
+            st.success("Circuit simulation completed!")
     
     with col2:
-        st.subheader("📊 Your Quiz Statistics")
+        x, y, z = bloch_coords(final_state)
+        fig = create_bloch_sphere(x, y, z, "Final State on Bloch Sphere")
+        st.plotly_chart(fig, use_container_width=True)
         
-        # Overall stats
-        total_quizzes = len([key for key in st.session_state.quiz_scores.keys()])
-        if total_quizzes > 0:
-            avg_score = np.mean(list(st.session_state.quiz_scores.values()))
-            st.metric("Quizzes Completed", total_quizzes)
-            st.metric("Average Score", f"{avg_score:.1f}%")
-        else:
-            st.info("Complete your first quiz to see statistics!")
-        
-        # Recent performance
-        if st.session_state.quiz_scores:
-            st.subheader("📈 Recent Scores")
-            for quiz_name, score in list(st.session_state.quiz_scores.items())[-5:]:
-                st.markdown(f"• {quiz_name}: {score:.0f}%")
-
-# ----------------------- Quantum Challenges ----------------------------
+        st.subheader("🧠 Gate Reference")
+        st.markdown("""
+        - **X**: Bit flip (|0⟩ ↔ |1⟩)
+        - **H**: Creates superposition
+        - **Z**: Phase flip (adds minus to |1⟩)
+        - **Rx/Ry/Rz**: Rotation around X/Y/Z axis
+        - **Phase**: Adds phase to |1⟩ state
+        """)
 
 def quantum_challenges():
     st.header("🎮 Quantum Challenges")
     st.markdown("Test your skills with these quantum mechanics challenges!")
     
-    # Challenge categories
-    challenge_type = st.selectbox(
-        "Choose challenge type:",
-        ["🎯 State Creation", "🔧 Circuit Puzzles", "📊 Measurement Games", "🧩 Quantum Logic"]
-    )
+    st.subheader("State Creation Challenges")
+    st.markdown("Create specific quantum states using the minimum number of operations!")
     
-    if challenge_type == "🎯 State Creation":
-        st.subheader("State Creation Challenges")
-        st.markdown("Create specific quantum states using the minimum number of operations!")
-        
-        challenges = [
-            {
-                "name": "The Perfect Balance",
-                "description": "Create a state with exactly 30% probability of measuring |0⟩",
-                "target_prob": 0.3,
-                "max_operations": 3,
-                "difficulty": "medium",
-                "reward": 25
-            },
-            {
-                "name": "Complex Phase Master",
-                "description": "Create the state (|0⟩ + e^(iπ/3)|1⟩)/√2",
-                "target_state": "complex_phase",
-                "max_operations": 2,
-                "difficulty": "hard",
-                "reward": 40
-            },
-            {
-                "name": "Quantum Coin Flip",
-                "description": "Create perfect 50/50 superposition starting from |1⟩",
-                "initial_state": "|1⟩",
-                "target_prob": 0.5,
-                "max_operations": 1,
-                "difficulty": "easy",
-                "reward": 15
-            }
-        ]
-        
-        selected_challenge = st.selectbox("Choose a challenge:", challenges, format_func=lambda x: x['name'])
-        
-        st.markdown(f"**🎯 Challenge:** {selected_challenge['name']}")
-        st.markdown(f"**📝 Description:** {selected_challenge['description']}")
-        st.markdown(f"**⚡ Difficulty:** {selected_challenge['difficulty'].title()}")
-        st.markdown(f"**🏆 Reward:** {selected_challenge['reward']} XP + coins")
-        st.markdown(f"**🔢 Max Operations:** {selected_challenge['max_operations']}")
-        
-        # Challenge interface
-        if 'challenge_operations' not in st.session_state:
-            st.session_state.challenge_operations = []
-        
-        st.subheader("🔧 Your Solution")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            operation = st.selectbox("Add operation:", ["H", "X", "Y", "Z", "Rx(π/2)", "Ry(π/2)", "Rz(π/2)"])
-            
-            if st.button("Add Operation"):
-                if len(st.session_state.challenge_operations) < selected_challenge['max_operations']:
-                    st.session_state.challenge_operations.append(operation)
-                else:
-                    st.error(f"Maximum {selected_challenge['max_operations']} operations allowed!")
-        
-        with col2:
-            if st.button("Clear Solution"):
-                st.session_state.challenge_operations = []
-        
-        # Show current solution
-        if st.session_state.challenge_operations:
-            operations_str = " → ".join(st.session_state.challenge_operations)
-            initial = selected_challenge.get('initial_state', '|0⟩')
-            st.markdown(f"**Current solution:** {initial} → {operations_str}")
-        
-        # Test solution
-        if st.button("🧪 Test Solution", type="primary"):
-            if not st.session_state.challenge_operations:
-                st.error("Add at least one operation!")
-                return
-            
-            # Simulate the operations
-            initial_state = ket1() if selected_challenge.get('initial_state') == '|1⟩' else ket0()
-            current_state = initial_state.copy()
-            
-            for op in st.session_state.challenge_operations:
-                if op == "H":
-                    current_state = apply(H, current_state)
-                elif op == "X":
-                    current_state = apply(X, current_state)
-                elif op == "Y":
-                    current_state = apply(Y, current_state)
-                elif op == "Z":
-                    current_state = apply(Z, current_state)
-                elif op == "Rx(π/2)":
-                    current_state = apply(Rx(np.pi/2), current_state)
-                elif op == "Ry(π/2)":
-                    current_state = apply(Ry(np.pi/2), current_state)
-                elif op == "Rz(π/2)":
-                    current_state = apply(Rz(np.pi/2), current_state)
-            
-            probs = measure_probs(current_state)
-            
-            # Check if challenge is solved
-            success = False
-            if 'target_prob' in selected_challenge:
-                error = abs(probs['0'] - selected_challenge['target_prob'])
-                if error < 0.01:
-                    success = True
-                    st.success(f"🎉 Challenge completed! Error: {error:.4f}")
-                else:
-                    st.error(f"❌ Not quite right. Error: {error:.3f}")
-            
-            # Show final state
-            st.code(f"Final state: {cfmt(current_state[0,0])}|0⟩ + {cfmt(current_state[1,0])}|1⟩")
-            st.markdown(f"P(|0⟩) = {probs['0']:.4f}, P(|1⟩) = {probs['1']:.4f}")
-            
-            if success:
-                reward = selected_challenge['reward']
-                difficulty = selected_challenge['difficulty']
-                add_xp_enhanced(reward, f"Completed {selected_challenge['name']}!", difficulty, True)
-                
-                # Special achievement for perfect solutions
-                if len(st.session_state.challenge_operations) == 1 and selected_challenge['max_operations'] > 1:
-                    st.balloons()
-                    st.success("🌟 PERFECT SOLUTION BONUS! +50% XP")
-                    add_xp_enhanced(reward // 2, "Perfect solution bonus!", difficulty, True)
-
-# ----------------------- Quantum Shop ----------------------------
+    challenges = [
+        {
+            "name": "The Perfect Balance",
+            "description": "Create a state with exactly 30% probability of measuring |0⟩",
+            "target_prob": 0.3,
+            "difficulty": "medium",
+            "reward": 25
+        },
+        {
+            "name": "Quantum Coin Flip",
+            "description": "Create perfect 50/50 superposition starting from |1⟩",
+            "target_prob": 0.5,
+            "difficulty": "easy",
+            "reward": 15
+        }
+    ]
+    
+    challenge = st.selectbox("Choose a challenge:", challenges, format_func=lambda x: x['name'])
+    
+    st.markdown(f"**🎯 Challenge:** {challenge['name']}")
+    st.markdown(f"**📝 Description:** {challenge['description']}")
+    st.markdown(f"**⚡ Difficulty:** {challenge['difficulty'].title()}")
+    st.markdown(f"**🏆 Reward:** {challenge['reward']} XP + coins")
+    
+    # Simple challenge interface
+    st.subheader("🔧 Your Solution")
+    
+    operation = st.selectbox("Choose operation:", ["H", "X", "Y", "Z"])
+    
+    if st.button("🧪 Test Solution", type="primary"):
+        # Simulate based on challenge
+        if challenge['name'] == "Quantum Coin Flip" and operation == "H":
+            st.success("🎉 Challenge completed!")
+            add_xp_enhanced(challenge['reward'], f"Completed {challenge['name']}!", challenge['difficulty'], True)
+        elif challenge['name'] == "The Perfect Balance":
+            st.info("💡 Try using a combination of rotation gates to achieve the exact probability!")
+        else:
+            st.error("❌ Not quite right. Think about what each gate does!")
 
 def quantum_shop():
     st.header("💎 Quantum Shop")
@@ -942,114 +907,56 @@ def quantum_shop():
     
     st.markdown(f"**Your Quantum Coins:** ⚛️ {st.session_state.quantum_coins}")
     
-    if 'shop_inventory' not in st.session_state:
-        st.session_state.shop_inventory = {
-            'hint_booster': 0,
-            'xp_multiplier': 0,
-            'theme_dark': False,
-            'theme_neon': False,
-            'advanced_bloch': False
-        }
+    # Shop items
+    col1, col2, col3 = st.columns(3)
     
-    # Shop categories
-    shop_category = st.selectbox("Shop Category:", ["🔧 Utilities", "🎨 Themes", "📊 Visualizations"])
-    
-    if shop_category == "🔧 Utilities":
-        st.subheader("Utility Items")
+    with col1:
+        st.markdown("### 💡 Hint Booster")
+        st.markdown("Get extra hints in quizzes")
+        st.markdown("**Price:** ⚛️ 50")
+        st.markdown(f"**Owned:** {st.session_state.shop_inventory['hint_booster']}")
         
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.markdown("### 💡 Hint Booster")
-            st.markdown("Get extra hints in quizzes")
-            st.markdown("**Price:** ⚛️ 50")
-            st.markdown(f"**Owned:** {st.session_state.shop_inventory['hint_booster']}")
-            
-            if st.button("Buy Hint Booster"):
-                if st.session_state.quantum_coins >= 50:
-                    st.session_state.quantum_coins -= 50
-                    st.session_state.shop_inventory['hint_booster'] += 1
-                    st.success("Purchased! You now have extra hints available.")
-                else:
-                    st.error("Not enough quantum coins!")
-        
-        with col2:
-            st.markdown("### ⚡ XP Multiplier")
-            st.markdown("2x XP for next 10 activities")
-            st.markdown("**Price:** ⚛️ 100")
-            st.markdown(f"**Owned:** {st.session_state.shop_inventory['xp_multiplier']}")
-            
-            if st.button("Buy XP Multiplier"):
-                if st.session_state.quantum_coins >= 100:
-                    st.session_state.quantum_coins -= 100
-                    st.session_state.shop_inventory['xp_multiplier'] += 1
-                    st.success("Purchased! Your next 10 activities will give 2x XP!")
-                else:
-                    st.error("Not enough quantum coins!")
-    
-    elif shop_category == "🎨 Themes":
-        st.subheader("Visual Themes")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("### 🌙 Dark Quantum Theme")
-            st.markdown("Sleek dark theme for night studying")
-            st.markdown("**Price:** ⚛️ 150")
-            
-            if st.session_state.shop_inventory['theme_dark']:
-                st.success("✅ Owned")
+        if st.button("Buy Hint Booster"):
+            if st.session_state.quantum_coins >= 50:
+                st.session_state.quantum_coins -= 50
+                st.session_state.shop_inventory['hint_booster'] += 1
+                st.success("Purchased! You now have extra hints available.")
             else:
-                if st.button("Buy Dark Theme"):
-                    if st.session_state.quantum_coins >= 150:
-                        st.session_state.quantum_coins -= 150
-                        st.session_state.shop_inventory['theme_dark'] = True
-                        st.success("Theme purchased! Restart to apply.")
-                    else:
-                        st.error("Not enough quantum coins!")
-        
-        with col2:
-            st.markdown("### 🌈 Neon Quantum Theme")
-            st.markdown("Vibrant neon colors")
-            st.markdown("**Price:** ⚛️ 200")
-            
-            if st.session_state.shop_inventory['theme_neon']:
-                st.success("✅ Owned")
-            else:
-                if st.button("Buy Neon Theme"):
-                    if st.session_state.quantum_coins >= 200:
-                        st.session_state.quantum_coins -= 200
-                        st.session_state.shop_inventory['theme_neon'] = True
-                        st.success("Theme purchased! Restart to apply.")
-                    else:
-                        st.error("Not enough quantum coins!")
+                st.error("Not enough quantum coins!")
     
-    else:  # Visualizations
-        st.subheader("Advanced Visualizations")
+    with col2:
+        st.markdown("### ⚡ XP Multiplier")
+        st.markdown("2x XP for next 10 activities")
+        st.markdown("**Price:** ⚛️ 100")
+        st.markdown(f"**Owned:** {st.session_state.shop_inventory['xp_multiplier']}")
         
-        st.markdown("### 🌐 Advanced Bloch Sphere")
-        st.markdown("Enhanced Bloch sphere with animations and multiple qubits")
-        st.markdown("**Price:** ⚛️ 300")
+        if st.button("Buy XP Multiplier"):
+            if st.session_state.quantum_coins >= 100:
+                st.session_state.quantum_coins -= 100
+                st.session_state.shop_inventory['xp_multiplier'] += 1
+                st.success("Purchased! Your next 10 activities will give 2x XP!")
+            else:
+                st.error("Not enough quantum coins!")
+    
+    with col3:
+        st.markdown("### 🌙 Dark Theme")
+        st.markdown("Sleek dark theme for night studying")
+        st.markdown("**Price:** ⚛️ 150")
         
-        if st.session_state.shop_inventory['advanced_bloch']:
-            st.success("✅ Owned - Available in all labs!")
+        if st.session_state.shop_inventory['theme_dark']:
+            st.success("✅ Owned")
         else:
-            if st.button("Buy Advanced Bloch Sphere"):
-                if st.session_state.quantum_coins >= 300:
-                    st.session_state.quantum_coins -= 300
-                    st.session_state.shop_inventory['advanced_bloch'] = True
-                    st.success("Purchased! Advanced visualizations now available!")
+            if st.button("Buy Dark Theme"):
+                if st.session_state.quantum_coins >= 150:
+                    st.session_state.quantum_coins -= 150
+                    st.session_state.shop_inventory['theme_dark'] = True
+                    st.success("Theme purchased!")
                 else:
                     st.error("Not enough quantum coins!")
-
-# ----------------------- Remaining Original Functions ----------------------------
-# (Keep the original functions that haven't been enhanced)
 
 def bloch_explorer():
     st.header("Bloch Explorer")
     st.markdown("Freely navigate the Bloch sphere and observe the state vector in real-time.")
-    
-    st.markdown("Use the sliders to control the polar ($θ$) and azimuthal ($φ$) angles.")
     
     theta_slider = st.slider("Polar Angle (θ) from Z-axis", 0.0, np.pi, np.pi/4, 0.01)
     phi_slider = st.slider("Azimuthal Angle (φ) from X-axis", 0.0, 2 * np.pi, np.pi/2, 0.01)
@@ -1078,962 +985,56 @@ def bloch_explorer():
         st.metric("P(|0⟩)", f"{probs['0']:.3f}")
     with col2:
         st.metric("P(|1⟩)", f"{probs['1']:.3f}")
-    
-    st.markdown("---")
-    st.markdown("### 🎯 Challenges")
-    st.markdown("""
-    1.  Find the coordinates for the **|1⟩** state.
-    2.  Find the coordinates for the **|+⟩** state.
-    3.  Find the coordinates for the state **(|0⟩ - i|1⟩)/√2**.
-    
-    *Hint: Think about which axes the state vector should align with.*
-    """)
-
-def interference_sandbox():
-    st.header("Interference Sandbox")
-    st.markdown("Explore how quantum states interfere, a key principle behind quantum algorithms.")
-
-    st.write("Imagine two paths a particle can take. Each path has a different phase shift.")
-    st.markdown("The final probability of a state is not just the sum of probabilities of each path, but a result of their interference.")
-
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.subheader("Two-Path Interference")
-        st.write("Here, we have a simple interferometer model. The particle can take a Path 0 or Path 1.")
-    
-        # Path 0
-        path0_amplitude = st.number_input("Path 0 Amplitude (real)", -1.0, 1.0, 1/np.sqrt(2), step=0.01, key="p0_amp")
-        path0_phase = st.slider("Path 0 Phase (radians)", 0.0, 2*np.pi, 0.0, step=0.01, key="p0_phase")
-    
-        # Path 1
-        path1_amplitude = st.number_input("Path 1 Amplitude (real)", -1.0, 1.0, 1/np.sqrt(2), step=0.01, key="p1_amp")
-        path1_phase = st.slider("Path 1 Phase (radians)", 0.0, 2*np.pi, np.pi/2, step=0.01, key="p1_phase")
-    
-        # Calculate combined amplitude
-        final_amp = (path0_amplitude * np.exp(1j * path0_phase)) + (path1_amplitude * np.exp(1j * path1_phase))
-        final_prob = np.abs(final_amp)**2
-    
-        st.metric("Final Intensity (Probability)", f"{final_prob:.3f}")
-    
-    with col2:
-        st.subheader("Visualization")
-        fig_int, ax_int = plt.subplots(figsize=(6, 4))
-        ax_int.set_title("Interference Pattern")
-    
-        # Visualize the two waves and their sum
-        t = np.linspace(0, 2 * np.pi, 100)
-        wave0 = path0_amplitude * np.cos(t - path0_phase)
-        wave1 = path1_amplitude * np.cos(t - path1_phase)
-        total_wave = wave0 + wave1
-    
-        ax_int.plot(t, wave0, label='Wave 0', color='blue', linestyle='--')
-        ax_int.plot(t, wave1, label='Wave 1', color='orange', linestyle='--')
-        ax_int.plot(t, total_wave, label='Combined Wave', color='red')
-    
-        ax_int.set_xlabel("Time/Position")
-        ax_int.set_ylabel("Amplitude")
-        ax_int.set_ylim(-2.5, 2.5)
-        ax_int.legend()
-        st.pyplot(fig_int)
-
-    st.markdown("---")
-    st.subheader("🎯 Challenges")
-    
-    col_c1, col_c2, col_c3 = st.columns(3)
-    
-    with col_c1:
-        st.info("Challenge 1: Perfect Constructive Interference")
-        if st.button("Check 1"):
-            if abs(final_prob - (np.sqrt(2))**2) < 0.01:
-                st.session_state.interference_challenges["max_constructive"] = True
-                add_xp_enhanced(20, "Achieved perfect constructive interference!", 'medium', True)
-            else:
-                st.error("Hint: Make the two waves perfectly in phase.")
-
-    with col_c2:
-        st.info("Challenge 2: Perfect Destructive Interference")
-        if st.button("Check 2"):
-            if abs(final_prob) < 0.01:
-                st.session_state.interference_challenges["max_destructive"] = True
-                add_xp_enhanced(20, "Achieved perfect destructive interference!", 'medium', True)
-            else:
-                st.error("Hint: The waves need to cancel each other out.")
-
-    with col_c3:
-        st.info("Challenge 3: 50/50 Chance")
-        if st.button("Check 3"):
-            if abs(final_prob - 1) < 0.01:
-                st.session_state.interference_challenges["half_prob"] = True
-                add_xp_enhanced(20, "Created a 50/50 probability!", 'medium', True)
-            else:
-                st.error("Hint: The final wave's intensity should be 1.")
-
-def stern_gerlach_lab():
-    st.header("Stern–Gerlach Spin Measurement")
-    st.markdown("This experiment demonstrates the **quantization of spin**. A beam of particles splits into discrete beams.")
-
-    st.markdown("Imagine you're firing a beam of silver atoms, each with an intrinsic spin, through a non-uniform magnetic field.")
-    st.write("Classically, you'd expect a continuous smear, but quantum mechanics predicts only two possible outcomes.")
-
-    if st.button("▶️ Send a Particle", type="primary"):
-        spin_state = np.random.choice(["Spin Up", "Spin Down"], p=[0.5, 0.5])
-    
-        st.info(f"Measured: **{spin_state}**")
-    
-        # Simple animation of particles splitting
-        fig_sg, ax_sg = plt.subplots(figsize=(8, 4))
-        ax_sg.set_title("Stern-Gerlach Experiment")
-        ax_sg.set_xlim(0, 10)
-        ax_sg.set_ylim(-3, 3)
-        ax_sg.set_xticks([])
-        ax_sg.set_yticks([])
-        ax_sg.axvline(x=5, color='gray', linestyle='--')
-    
-        # Magnetic field representation
-        ax_sg.text(5.1, 2, "North Pole (N)", ha='left', va='center')
-        ax_sg.text(5.1, -2, "South Pole (S)", ha='left', va='center')
-    
-        # Path of the particle
-        ax_sg.plot([0, 5], [0, 0], 'o-', color='black', label='Incoming Beam')
-        if spin_state == "Spin Up":
-            ax_sg.plot([5, 10], [0, 2], 'o-', color='blue')
-            ax_sg.text(9, 2, "Up", ha='right', va='center', color='blue')
-        else:
-            ax_sg.plot([5, 10], [0, -2], 'o-', color='red')
-            ax_sg.text(9, -2, "Down", ha='right', va='center', color='red')
-    
-        ax_sg.legend()
-        st.pyplot(fig_sg)
-    
-        add_xp_enhanced(10, "Simulated Stern-Gerlach experiment.", 'easy', True)
-
-def entanglement_workshop():
-    st.header("Quantum Entanglement Lab")
-    st.markdown("What Einstein called **'spooky action at a distance.'** When two qubits are entangled, their fates are linked.")
-    st.markdown("Measuring one instantly affects the other, no matter the distance between them.")
-    
-    st.subheader("Bell State Generation")
-    st.write("We will create a Bell state, $|Φ^+\\rangle = (|00\\rangle + |11\\rangle)/\\sqrt{2}$.")
-    st.write("This state means the two qubits are perfectly correlated. If the first qubit is measured as $|0\\rangle$, the second will also be $|0\\rangle$. The same is true for $|1\\rangle$.")
-    
-    qc2 = QuantumCircuit(2)
-    st.markdown("#### Quantum Circuit")
-    st.code("H-gate on qubit 0, then CNOT(0,1)")
-    
-    shots = st.slider("Number of measurements", 100, 2048, 1024)
-    
-    if st.button("🔬 Entangle & Measure", type="primary"):
-        with st.spinner("Executing entanglement experiment..."):
-            qc2.h(0)
-            qc2.cx(0, 1)
-            qc2.measure_all()
-            simulator = Aer.get_backend('qasm_simulator')
-            result = execute(qc2, simulator, shots=shots).result()
-            counts = result.get_counts()
-    
-            st.success("Entanglement created: |Φ+> Bell state!")
-    
-            counts_df = pd.Series(counts)
-            fig_counts = px.bar(
-                x=counts_df.index,
-                y=counts_df.values,
-                labels={'x': 'Measurement Outcome', 'y': 'Counts'},
-                title="Measurement Results for Entangled Qubits"
-            )
-            st.plotly_chart(fig_counts)
-    
-            if '01' not in counts and '10' not in counts:
-                add_xp_enhanced(30, "Confirmed spooky action! No uncorrelated outcomes.", 'hard', True)
-                if "Spooky Action Confirmed" not in st.session_state.achievements:
-                    st.session_state.achievements.append("Spooky Action Confirmed")
-
-def quantum_simulator():
-    st.header("Quantum Simulator")
-    st.markdown("Use a full quantum circuit simulator to run more complex experiments.")
-    
-    n_qubits = st.slider("Number of Qubits", 1, 4, 2, 1)
-    st.info("The number of possible states doubles with each additional qubit, demonstrating the power of quantum scaling.")
-    
-    qc = QuantumCircuit(n_qubits)
-    
-    with st.expander("Add Gates"):
-        gate_type = st.selectbox("Gate to add", ["Hadamard", "CNOT", "Pauli-X", "Pauli-Z", "Measurement"])
-    
-        if gate_type == "Hadamard":
-            target_qubit = st.number_input("Target Qubit", 0, n_qubits - 1)
-            if st.button("Add H Gate"):
-                qc.h(target_qubit)
-    
-        elif gate_type == "CNOT":
-            control_qubit = st.number_input("Control Qubit", 0, n_qubits - 1)
-            target_qubit = st.number_input("Target Qubit", 0, n_qubits - 1)
-            if control_qubit != target_qubit and st.button("Add CNOT Gate"):
-                qc.cx(control_qubit, target_qubit)
-    
-        elif gate_type == "Pauli-X":
-            target_qubit = st.number_input("Target Qubit", 0, n_qubits - 1)
-            if st.button("Add X Gate"):
-                qc.x(target_qubit)
-
-        elif gate_type == "Pauli-Z":
-            target_qubit = st.number_input("Target Qubit", 0, n_qubits - 1)
-            if st.button("Add Z Gate"):
-                qc.z(target_qubit)
-    
-        elif gate_type == "Measurement":
-            if st.button("Add Measurement"):
-                qc.measure_all()
-    
-    st.markdown("### Your Quantum Circuit")
-    st.code("Circuit diagram would be displayed here")
-    
-    if st.button("Run Simulation", type="primary"):
-        if not qc.data:
-            st.error("Please add at least one gate to the circuit before running the simulation.")
-            return
-
-        with st.spinner("Simulating circuit..."):
-            simulator = Aer.get_backend('qasm_simulator')
-            result = execute(qc, simulator, shots=1024).result()
-            counts = result.get_counts()
-    
-            st.success("Simulation complete!")
-    
-            counts_df = pd.Series(counts)
-            fig_counts = px.bar(
-                x=counts_df.index,
-                y=counts_df.values,
-                labels={'x': 'Measurement Outcome', 'y': 'Counts'},
-                title="Simulation Results"
-            )
-            st.plotly_chart(fig_counts)
-    
-            add_xp_enhanced(15, "Successfully ran a quantum simulation!", 'medium', True)
-
-def future_quest_modules():
-    st.header("🚀 Future Quest Modules")
-    st.info("Stay tuned! More advanced modules are coming soon.")
-    
-    # Preview upcoming features
-    upcoming_features = [
-        {
-            "title": "🌐 Quantum Teleportation Lab",
-            "description": "Learn how to transfer a quantum state from one qubit to another using entanglement.",
-            "difficulty": "Advanced",
-            "eta": "Coming Soon"
-        },
-        {
-            "title": "🔐 Quantum Cryptography Workshop", 
-            "description": "Explore quantum key distribution and unbreakable quantum communication.",
-            "difficulty": "Expert",
-            "eta": "Q2 2024"
-        },
-        {
-            "title": "🔍 Grover's Search Algorithm",
-            "description": "Use quantum algorithms to search databases faster than any classical computer.",
-            "difficulty": "Expert", 
-            "eta": "Q3 2024"
-        },
-        {
-            "title": "🧮 Shor's Factoring Algorithm",
-            "description": "Discover how quantum computers could break current encryption methods.",
-            "difficulty": "Master",
-            "eta": "Q4 2024"
-        },
-        {
-            "title": "🎮 Quantum Games & Puzzles",
-            "description": "Fun quantum mechanical games and brain teasers.",
-            "difficulty": "All Levels",
-            "eta": "Next Update"
-        }
-    ]
-    
-    for feature in upcoming_features:
-        with st.expander(f"{feature['title']} - {feature['eta']}"):
-            st.markdown(f"**Description:** {feature['description']}")
-            st.markdown(f"**Difficulty:** {feature['difficulty']}")
-            st.markdown(f"**Expected Release:** {feature['eta']}")
-    
-    # User feedback section
-    st.subheader("📝 Request Features")
-    st.markdown("What would you like to see in future updates?")
-    
-    user_request = st.text_area("Describe a feature you'd like to see:")
-    if st.button("Submit Request"):
-        if user_request:
-            st.success("Thank you for your feedback! We'll consider this for future updates.")
-            add_xp_enhanced(5, "Provided valuable feedback!", 'easy', True)
 
 def resources_page():
     st.header("📚 Quantum Learning Resources")
     st.markdown("### Continue Your Quantum Journey")
     
-    # Resource categories
-    resource_type = st.selectbox(
-        "Choose resource type:",
-        ["📖 Books & Textbooks", "🎥 Videos & Courses", "💻 Interactive Tools", "🔬 Research Papers"]
-    )
+    st.subheader("Recommended Books")
+    st.markdown("""
+    - **Quantum Computing: An Applied Approach** by Hidary, J. D.
+    - **Quantum Computation and Quantum Information** by Nielsen & Chuang
+    - **Programming Quantum Computers** by Johnston, Harrigan & Gimeno-Segovia
+    """)
     
-    if resource_type == "📖 Books & Textbooks":
-        st.subheader("Recommended Reading")
-        
-        books = [
-            {
-                "title": "Quantum Computing: An Applied Approach",
-                "authors": "Hidary, J. D.",
-                "level": "Beginner to Intermediate",
-                "description": "Practical introduction with hands-on examples"
-            },
-            {
-                "title": "Quantum Computation and Quantum Information", 
-                "authors": "Nielsen, M. A. & Chuang, I. L.",
-                "level": "Intermediate to Advanced",
-                "description": "The definitive textbook on quantum information"
-            },
-            {
-                "title": "Programming Quantum Computers",
-                "authors": "Johnston, E. R., Harrigan, N., & Gimeno-Segovia, M.",
-                "level": "Intermediate",
-                "description": "Learn to program quantum algorithms"
-            }
-        ]
-        
-        for book in books:
-            st.markdown(f"**{book['title']}**")
-            st.markdown(f"*Authors:* {book['authors']}")
-            st.markdown(f"*Level:* {book['level']}")
-            st.markdown(f"*Description:* {book['description']}")
-            st.markdown("---")
+    st.subheader("Online Courses")
+    st.markdown("""
+    - **IBM Qiskit Textbook** - Comprehensive online resource
+    - **Microsoft Quantum Development Kit** - Learn Q# programming
+    - **edX Quantum Mechanics Courses** - University-level content
+    """)
     
-    elif resource_type == "🎥 Videos & Courses":
-        st.subheader("Video Learning")
-        
-        courses = [
-            {
-                "title": "IBM Qiskit Textbook",
-                "provider": "IBM Quantum",
-                "url": "https://qiskit.org/textbook/",
-                "description": "Comprehensive online textbook with interactive examples"
-            },
-            {
-                "title": "Quantum Mechanics and Quantum Computation",
-                "provider": "UC Berkeley (edX)",
-                "description": "University-level course on quantum mechanics foundations"
-            },
-            {
-                "title": "Microsoft Quantum Development Kit",
-                "provider": "Microsoft",
-                "description": "Learn Q# programming language for quantum computing"
-            }
-        ]
-        
-        for course in courses:
-            st.markdown(f"**{course['title']}**")
-            st.markdown(f"*Provider:* {course['provider']}")
-            st.markdown(f"*Description:* {course['description']}")
-            if 'url' in course:
-                st.markdown(f"*Link:* {course['url']}")
-            st.markdown("---")
-    
-    elif resource_type == "💻 Interactive Tools":
-        st.subheader("Hands-on Learning Platforms")
-        
-        tools = [
-            {
-                "name": "IBM Quantum Experience",
-                "description": "Run quantum circuits on real quantum computers",
-                "access": "Free with registration"
-            },
-            {
-                "name": "Google Cirq",
-                "description": "Python library for quantum circuits on Google's quantum processors",
-                "access": "Open source"
-            },
-            {
-                "name": "Microsoft Q# Simulator",
-                "description": "Simulate quantum algorithms locally",
-                "access": "Free download"
-            },
-            {
-                "name": "Quantum Computing Playground",
-                "description": "Browser-based quantum circuit simulator",
-                "access": "Free online"
-            }
-        ]
-        
-        for tool in tools:
-            st.markdown(f"**{tool['name']}**")
-            st.markdown(f"*Description:* {tool['description']}")
-            st.markdown(f"*Access:* {tool['access']}")
-            st.markdown("---")
-    
-    else:  # Research Papers
-        st.subheader("Key Research Papers")
-        st.info("These papers shaped the field of quantum computing")
-        
-        papers = [
-            {
-                "title": "Quantum Theory, the Church-Turing Principle and the Universal Quantum Computer",
-                "author": "David Deutsch (1985)",
-                "significance": "Laid theoretical foundations for quantum computing"
-            },
-            {
-                "title": "Algorithms for Quantum Computation: Discrete Logarithms and Factoring",
-                "author": "Peter Shor (1994)",
-                "significance": "Showed quantum computers could break current encryption"
-            },
-            {
-                "title": "Quantum Mechanics Helps in Searching for a Needle in a Haystack",
-                "author": "Lov Grover (1996)",
-                "significance": "Demonstrated quantum speedup for search problems"
-            }
-        ]
-        
-        for paper in papers:
-            st.markdown(f"**{paper['title']}**")
-            st.markdown(f"*Author:* {paper['author']}")
-            st.markdown(f"*Significance:* {paper['significance']}")
-            st.markdown("---")
-    
-    # Study tips
     st.subheader("🎯 Study Tips")
     study_tips = [
         "Start with the mathematical foundations - linear algebra and complex numbers",
         "Practice with simulators before trying real quantum hardware",
         "Join quantum computing communities and forums for discussions",
-        "Work through problems step-by-step, don't rush concepts",
-        "Relate quantum concepts to classical analogs when possible",
-        "Experiment with different quantum programming languages"
+        "Work through problems step-by-step, don't rush concepts"
     ]
     
     for i, tip in enumerate(study_tips, 1):
         st.markdown(f"{i}. {tip}")
 
-# ----------------------- Quiz System Implementation ----------------------------
-
-def enhanced_quiz_center():
-    st.header("🧠 Enhanced Quantum Quiz Center")
-    st.markdown("Test your quantum knowledge with adaptive quizzes and instant feedback!")
+def future_quest_modules():
+    st.header("🚀 Future Quest Modules")
+    st.info("Stay tuned! More advanced modules are coming soon.")
     
-    # Define all quiz questions
-    all_quizzes = {
-        'superposition_basics': {
-            'title': 'Superposition Fundamentals',
-            'difficulty': 'easy',
-            'concept': 'superposition',
-            'questions': [
-                {
-                    'question': "What does the Hadamard gate do to a |0⟩ qubit?",
-                    'options': ["Flips it to |1⟩", "Creates an equal superposition", "Measures it", "Does nothing"],
-                    'correct': 1,
-                    'explanation': "The Hadamard gate creates an equal superposition: H|0⟩ = (|0⟩ + |1⟩)/√2"
-                },
-                {
-                    'question': "In the state |ψ⟩ = 0.6|0⟩ + 0.8|1⟩, what's the probability of measuring |0⟩?",
-                    'options': ["0.6", "0.36", "0.8", "0.5"],
-                    'correct': 1,
-                    'explanation': "Probability = |amplitude|². So P(|0⟩) = |0.6|² = 0.36"
-                },
-                {
-                    'question': "Can a qubit be in a state (|0⟩ + |1⟩ + |2⟩)/√3?",
-                    'options': ["Yes, this is valid", "No, qubits only have 2 states", "Yes, but only with measurement", "Only in quantum computers"],
-                    'correct': 1,
-                    'explanation': "Qubits have only two basis states: |0⟩ and |1⟩. A |2⟩ state doesn't exist for qubits."
-                },
-                {
-                    'question': "What happens to a qubit in superposition when measured?",
-                    'options': ["It stays in superposition", "It collapses to a definite state", "It becomes entangled", "It disappears"],
-                    'correct': 1,
-                    'explanation': "Measurement causes the superposition to collapse into one of the basis states."
-                },
-                {
-                    'question': "Which state represents maximum superposition on the Bloch sphere?",
-                    'options': ["North pole", "South pole", "Equator", "Center"],
-                    'correct': 2,
-                    'explanation': "States on the equator represent maximum superposition between |0⟩ and |1⟩."
-                }
-            ]
-        },
-        'quantum_gates': {
-            'title': 'Quantum Gates Mastery',
-            'difficulty': 'medium',
-            'concept': 'gates',
-            'questions': [
-                {
-                    'question': "What happens when you apply two Hadamard gates to |0⟩ (i.e., HH|0⟩)?",
-                    'options': ["You get |1⟩", "You get |0⟩", "You get (|0⟩ + |1⟩)/√2", "The state becomes undefined"],
-                    'correct': 1,
-                    'explanation': "H is its own inverse: HH = I. So HH|0⟩ = I|0⟩ = |0⟩"
-                },
-                {
-                    'question': "Which gate adds a phase of -1 to the |1⟩ state while leaving |0⟩ unchanged?",
-                    'options': ["X gate", "Y gate", "Z gate", "H gate"],
-                    'correct': 2,
-                    'explanation': "The Z gate does: Z|0⟩ = |0⟩ and Z|1⟩ = -|1⟩"
-                },
-                {
-                    'question': "What's the effect of applying X then Z to |0⟩?",
-                    'options': ["|0⟩", "-|0⟩", "|1⟩", "-|1⟩"],
-                    'correct': 3,
-                    'explanation': "X|0⟩ = |1⟩, then Z|1⟩ = -|1⟩"
-                },
-                {
-                    'question': "Which property must all quantum gates satisfy?",
-                    'options': ["They must be Hermitian", "They must be unitary", "They must be diagonal", "They must be real"],
-                    'correct': 1,
-                    'explanation': "Quantum gates must be unitary to preserve probability and ensure reversibility."
-                },
-                {
-                    'question': "What does the CNOT gate do?",
-                    'options': ["Flips both qubits", "Flips target if control is |1⟩", "Creates superposition", "Measures the qubits"],
-                    'correct': 1,
-                    'explanation': "CNOT flips the target qubit if and only if the control qubit is in state |1⟩."
-                }
-            ]
-        },
-        'measurement_theory': {
-            'title': 'Quantum Measurement',
-            'difficulty': 'medium',
-            'concept': 'measurement',
-            'questions': [
-                {
-                    'question': "After measuring a qubit in superposition, what happens to the state?",
-                    'options': ["It stays in superposition", "It collapses to a definite state", "It becomes entangled", "It disappears"],
-                    'correct': 1,
-                    'explanation': "Measurement causes wavefunction collapse - the superposition is destroyed and the qubit is in a definite state."
-                },
-                {
-                    'question': "You measure the state (|0⟩ + i|1⟩)/√2 in the computational basis. What are the probabilities?",
-                    'options': ["P(0)=1, P(1)=0", "P(0)=0.5, P(1)=0.5", "P(0)=0, P(1)=1", "Cannot be determined"],
-                    'correct': 1,
-                    'explanation': "P(0) = |1/√2|² = 0.5, P(1) = |i/√2|² = 0.5. The phase doesn't affect measurement probabilities."
-                },
-                {
-                    'question': "What information is lost during quantum measurement?",
-                    'options': ["Energy information", "Phase relationships", "Particle mass", "Nothing is lost"],
-                    'correct': 1,
-                    'explanation': "Measurement destroys phase relationships and superposition, keeping only probability information."
-                },
-                {
-                    'question': "Can you determine the exact quantum state from a single measurement?",
-                    'options': ["Yes, always", "No, never", "Only for basis states", "Only with special equipment"],
-                    'correct': 2,
-                    'explanation': "A single measurement only gives you one outcome. You need many measurements to estimate probabilities."
-                }
-            ]
-        },
-        'entanglement_advanced': {
-            'title': 'Quantum Entanglement',
-            'difficulty': 'hard',
-            'concept': 'entanglement',
-            'questions': [
-                {
-                    'question': "Which Bell state represents (|00⟩ + |11⟩)/√2?",
-                    'options': ["|Φ⁺⟩", "|Φ⁻⟩", "|Ψ⁺⟩", "|Ψ⁻⟩"],
-                    'correct': 0,
-                    'explanation': "|Φ⁺⟩ = (|00⟩ + |11⟩)/√2 is the classic Bell state where both qubits are always correlated."
-                },
-                {
-                    'question': "If you measure the first qubit of |Ψ⁺⟩ = (|01⟩ + |10⟩)/√2 and get |0⟩, what's the state of the second qubit?",
-                    'options': ["|0⟩", "|1⟩", "(|0⟩ + |1⟩)/√2", "Cannot be determined"],
-                    'correct': 1,
-                    'explanation': "In |Ψ⁺⟩, the qubits are anticorrelated. If first is |0⟩, second must be |1⟩."
-                },
-                {
-                    'question': "What makes the Bell states special?",
-                    'options': ["They are separable", "They are maximally entangled", "They are easy to create", "They last forever"],
-                    'correct': 1,
-                    'explanation': "Bell states are maximally entangled - they cannot be written as a product of individual qubit states."
-                },
-                {
-                    'question': "How do you create the |Φ⁺⟩ Bell state starting from |00⟩?",
-                    'options': ["H on first, then CNOT", "CNOT then H on first", "H on both qubits", "X on second, then H on first"],
-                    'correct': 0,
-                    'explanation': "Apply Hadamard to first qubit: (|0⟩+|1⟩)|0⟩/√2, then CNOT: (|00⟩+|11⟩)/√2"
-                }
-            ]
-        },
-        'bloch_sphere': {
-            'title': 'Bloch Sphere Geometry',
-            'difficulty': 'medium',
-            'concept': 'superposition',
-            'questions': [
-                {
-                    'question': "Where is the |1⟩ state located on the Bloch sphere?",
-                    'options': ["North pole", "South pole", "Equator", "Center"],
-                    'correct': 1,
-                    'explanation': "The |1⟩ state is at the south pole of the Bloch sphere (z = -1)."
-                },
-                {
-                    'question': "What do states on the equator of the Bloch sphere represent?",
-                    'options': ["Pure states", "Mixed states", "Equal superposition", "Entangled states"],
-                    'correct': 2,
-                    'explanation': "Equatorial states have equal probabilities for |0⟩ and |1⟩ measurements."
-                },
-                {
-                    'question': "How many real parameters are needed to specify a qubit state on the Bloch sphere?",
-                    'options': ["1", "2", "3", "4"],
-                    'correct': 1,
-                    'explanation': "Two angles (θ and φ) specify any point on the Bloch sphere."
-                }
-            ]
-        },
-        'quantum_algorithms': {
-            'title': 'Quantum Algorithms',
-            'difficulty': 'hard',
-            'concept': 'gates',
-            'questions': [
-                {
-                    'question': "What advantage does Grover's algorithm provide?",
-                    'options': ["Exponential speedup", "Quadratic speedup", "Linear speedup", "No speedup"],
-                    'correct': 1,
-                    'explanation': "Grover's algorithm provides quadratic speedup for unstructured search problems."
-                },
-                {
-                    'question': "What problem does Shor's algorithm solve efficiently?",
-                    'options': ["Graph coloring", "Integer factorization", "Protein folding", "Weather prediction"],
-                    'correct': 1,
-                    'explanation': "Shor's algorithm efficiently factors large integers, threatening current cryptography."
-                },
-                {
-                    'question': "What is quantum parallelism?",
-                    'options': ["Running multiple quantum computers", "Using superposition to evaluate functions on multiple inputs", "Parallel gate operations", "Measuring multiple qubits"],
-                    'correct': 1,
-                    'explanation': "Quantum parallelism uses superposition to evaluate a function on many inputs simultaneously."
-                }
-            ]
-        }
-    }
+    upcoming_features = [
+        "🌐 Quantum Teleportation Lab",
+        "🔐 Quantum Cryptography Workshop", 
+        "🔍 Grover's Search Algorithm",
+        "🧮 Shor's Factoring Algorithm",
+        "🎮 Quantum Games & Puzzles"
+    ]
     
-    # Quiz interface
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        # Quiz selection
-        st.subheader("📚 Available Quizzes")
-        
-        # Group quizzes by difficulty
-        easy_quizzes = {k: v for k, v in all_quizzes.items() if v['difficulty'] == 'easy'}
-        medium_quizzes = {k: v for k, v in all_quizzes.items() if v['difficulty'] == 'medium'}
-        hard_quizzes = {k: v for k, v in all_quizzes.items() if v['difficulty'] == 'hard'}
-        
-        # Beginner section
-        if easy_quizzes:
-            st.markdown("### 🌱 Beginner Level")
-            for quiz_id, quiz_data in easy_quizzes.items():
-                col_name, col_diff, col_start = st.columns([3, 1, 1])
-                with col_name:
-                    st.markdown(f"**{quiz_data['title']}**")
-                with col_diff:
-                    st.markdown("🟢 Easy")
-                with col_start:
-                    if st.button("Start", key=f"start_{quiz_id}"):
-                        st.session_state.current_quiz = quiz_id
-                        st.experimental_rerun()
-        
-        # Intermediate section
-        if medium_quizzes:
-            st.markdown("### 🔬 Intermediate Level")
-            for quiz_id, quiz_data in medium_quizzes.items():
-                col_name, col_diff, col_start = st.columns([3, 1, 1])
-                with col_name:
-                    st.markdown(f"**{quiz_data['title']}**")
-                with col_diff:
-                    st.markdown("🟡 Medium")
-                with col_start:
-                    if st.button("Start", key=f"start_{quiz_id}"):
-                        st.session_state.current_quiz = quiz_id
-                        st.experimental_rerun()
-        
-        # Advanced section
-        if hard_quizzes:
-            st.markdown("### 🎓 Advanced Level")
-            for quiz_id, quiz_data in hard_quizzes.items():
-                col_name, col_diff, col_start = st.columns([3, 1, 1])
-                with col_name:
-                    st.markdown(f"**{quiz_data['title']}**")
-                with col_diff:
-                    st.markdown("🔴 Hard")
-                with col_start:
-                    if st.button("Start", key=f"start_{quiz_id}"):
-                        st.session_state.current_quiz = quiz_id
-                        st.experimental_rerun()
-        
-        # Run active quiz
-        if 'current_quiz' in st.session_state and st.session_state.current_quiz in all_quizzes:
-            st.markdown("---")
-            run_active_quiz(all_quizzes[st.session_state.current_quiz], st.session_state.current_quiz)
-    
-    with col2:
-        st.subheader("📊 Quiz Statistics")
-        
-        # Overall performance
-        if st.session_state.quiz_scores:
-            scores = list(st.session_state.quiz_scores.values())
-            avg_score = np.mean(scores)
-            best_score = max(scores)
-            
-            st.metric("Quizzes Completed", len(scores))
-            st.metric("Average Score", f"{avg_score:.1f}%")
-            st.metric("Best Score", f"{best_score:.1f}%")
-            
-            # Performance by concept
-            st.subheader("📈 Mastery Levels")
-            for concept, level in st.session_state.mastery_levels.items():
-                stars = "⭐" * level + "☆" * (3 - level)
-                st.markdown(f"**{concept.title()}:** {stars}")
-        else:
-            st.info("Complete quizzes to see your progress!")
-
-def run_active_quiz(quiz_data, quiz_id):
-    """Run the currently active quiz"""
-    st.subheader(f"🧠 {quiz_data['title']}")
-    
-    # Initialize quiz state
-    if f"quiz_state_{quiz_id}" not in st.session_state:
-        st.session_state[f"quiz_state_{quiz_id}"] = {
-            'current_question': 0,
-            'score': 0,
-            'answers': [],
-            'completed': False
-        }
-    
-    quiz_state = st.session_state[f"quiz_state_{quiz_id}"]
-    questions = quiz_data['questions']
-    
-    if not quiz_state['completed']:
-        current_q = quiz_state['current_question']
-        
-        if current_q < len(questions):
-            question_data = questions[current_q]
-            
-            # Progress indicator
-            progress = (current_q + 1) / len(questions)
-            st.progress(progress)
-            st.markdown(f"**Question {current_q + 1} of {len(questions)}**")
-            
-            # Display question
-            st.markdown(f"### {question_data['question']}")
-            
-            # Answer options
-            answer = st.radio(
-                "Choose your answer:",
-                question_data['options'],
-                key=f"q_{quiz_id}_{current_q}"
-            )
-            
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                if st.button("Submit Answer", type="primary"):
-                    selected_index = question_data['options'].index(answer)
-                    is_correct = selected_index == question_data['correct']
-                    
-                    quiz_state['answers'].append({
-                        'question': question_data['question'],
-                        'selected': answer,
-                        'correct': is_correct,
-                        'explanation': question_data['explanation']
-                    })
-                    
-                    if is_correct:
-                        quiz_state['score'] += 1
-                        add_xp_enhanced(20, "Correct answer!", quiz_data['difficulty'], True)
-                        st.success("✅ Correct!")
-                        
-                        # Update mastery
-                        concept = quiz_data['concept']
-                        current_mastery = st.session_state.mastery_levels.get(concept, 0)
-                        st.session_state.mastery_levels[concept] = min(3, current_mastery + 1)
-                        
-                    else:
-                        add_xp_enhanced(5, "Keep learning!", quiz_data['difficulty'], False)
-                        st.error("❌ Incorrect")
-                        correct_answer = question_data['options'][question_data['correct']]
-                        st.info(f"The correct answer was: **{correct_answer}**")
-                    
-                    st.info(f"💡 **Explanation:** {question_data['explanation']}")
-                    quiz_state['current_question'] += 1
-                    
-                    time.sleep(3)
-                    st.experimental_rerun()
-            
-            with col2:
-                # Hint system (if user has hint boosters)
-                if st.session_state.shop_inventory.get('hint_booster', 0) > 0:
-                    if st.button("💡 Use Hint"):
-                        st.session_state.shop_inventory['hint_booster'] -= 1
-                        concept = quiz_data['concept']
-                        hint = QuantumTutor.adaptive_hint(concept, st.session_state.mastery_levels.get(concept, 0))
-                        st.info(f"🔍 **Hint:** {hint}")
-            
-            with col3:
-                if st.button("❌ Quit Quiz"):
-                    del st.session_state[f"quiz_state_{quiz_id}"]
-                    if 'current_quiz' in st.session_state:
-                        del st.session_state.current_quiz
-                    st.experimental_rerun()
-        
-        else:
-            quiz_state['completed'] = True
-            st.experimental_rerun()
-    
-    else:
-        # Quiz completed - show results
-        st.success("🎉 Quiz Completed!")
-        
-        score = quiz_state['score']
-        total = len(questions)
-        percentage = (score / total) * 100
-        
-        # Store score in session state
-        st.session_state.quiz_scores[quiz_id] = percentage
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Score", f"{score}/{total}")
-        with col2:
-            st.metric("Percentage", f"{percentage:.1f}%")
-        with col3:
-            if percentage >= 90:
-                grade = "A+"
-                st.metric("Grade", grade, delta="Excellent!")
-            elif percentage >= 80:
-                grade = "A"
-                st.metric("Grade", grade, delta="Great!")
-            elif percentage >= 70:
-                grade = "B"
-                st.metric("Grade", grade, delta="Good")
-            elif percentage >= 60:
-                grade = "C"
-                st.metric("Grade", grade, delta="Passing")
-            else:
-                grade = "F"
-                st.metric("Grade", grade, delta="Study more")
-        
-        # Performance feedback
-        if percentage >= 80:
-            st.success("🌟 Excellent work! You've mastered this concept!")
-            if f"{quiz_id}_mastery" not in st.session_state.achievements:
-                st.session_state.achievements.append(f"{quiz_data['title']} Mastery")
-                st.balloons()
-        elif percentage >= 60:
-            st.info("👍 Good job! Consider reviewing the material for even better understanding.")
-        else:
-            st.warning("📚 Keep studying! Review the concept tutorial and try again.")
-        
-        # Detailed feedback
-        if st.expander("📊 Detailed Results"):
-            for i, answer in enumerate(quiz_state['answers']):
-                status = "✅" if answer['correct'] else "❌"
-                st.markdown(f"**Q{i+1}:** {answer['question']}")
-                st.markdown(f"{status} Your answer: {answer['selected']}")
-                st.markdown(f"💡 {answer['explanation']}")
-                st.markdown("---")
-        
-        # Actions
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🔄 Retake Quiz"):
-                del st.session_state[f"quiz_state_{quiz_id}"]
-                st.experimental_rerun()
-        
-        with col2:
-            if st.button("📚 Study This Topic"):
-                if 'current_quiz' in st.session_state:
-                    del st.session_state.current_quiz
-                st.experimental_rerun()
-
-# ----------------------- Main App Entry Point ----------------------------
-
-if __name__ == '__main__':
-    main_app()index = question_data['options'].index(answer)
-                    is_correct = selected_index == question_data['correct']
-                    
-                    quiz_state['answers'].append({
-                        'question': question_data['question'],
-                        'selected': answer,
-                        'correct': is_correct,
-                        'explanation': question_data['explanation']
-                    })
-                    
-                    if is_correct:
-                        quiz_state['score'] += 1
-                        add_xp_enhanced(20, "Correct answer!", selected_quiz['difficulty'], True)
-                        st.success("✅ Correct!")
-                        st.info(f"💡 {question_data['explanation']}")
-                        
-                        # Update mastery level
-                        concept = selected_quiz['concept']
-                        st.session_state.mastery_levels[concept] = min(3, st.session_state.mastery_levels[concept] + 1)
-                        
-                    else:
-                        add_xp_enhanced(5, "Keep learning!", selected_quiz['difficulty'], False)
-                        st.error("❌ Incorrect")
-                        st.info(f"💡 {question_data['explanation']}")
-                        correct_answer = question_data['options'][question_data['correct']]
-                        st.info(f"The correct answer was: **{correct_answer}**")
-                    
-                    quiz_state['current_question'] += 1
-                    time.sleep(2)
-                    st.experimental_rerun()
-            
-            with col2:
-                if st.button("Get Hint"):
-                    concept = selected_quiz['concept']
-                    hint = QuantumTutor.adaptive_hint(concept, st.session_state.mastery_levels.get(concept, 0))
-                    st.info(f"💡 **Hint:** {hint}")
-        
-        else:
-            quiz_state['completed'] = True
-            st.experimental_rerun()
-    
-    else:
-        # Quiz completed - show results
-        st.success("🎉 Quiz Completed!")
-        
-        score = quiz_state['score']
-        total = len(questions)
-        percentage = (score / total) * 100
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Score", f"{score}/{total}")
-        with col2:
-            st.metric("Percentage", f"{percentage:.1f}%")
-        with col3:
-            grade = "A+" if percentage >= 90 else "A" if percentage >= 80 else "B" if percentage >= 70 else "C" if percentage >= 60 else "F"
-            st.metric("Grade", grade)
-        
-        # Performance analysis
-        if percentage >= 80:
-            st.success("🌟 Excellent work! You've mastered this concept!")
-            if f"{quiz_name}_mastery" not in st.session_state.achievements:
-                st.session_state.achievements.append(f"{quiz_name.replace('_', ' ').title()} Mastery")
-        elif percentage >= 60:
-            st.info("👍 Good job! Consider reviewing the material for even better understanding.")
-        else:
-            st.warning("📚 Keep studying! Review the concept tutorial and try again.")
-        
-        # Detailed feedback
-        if st.expander("📊 Detailed Results"):
-            for i, answer in enumerate(quiz_state['answers']):
-                status = "✅" if answer['correct'] else "❌"
-                st.markdown(f"**Q{i+1}:** {answer['question']}")
-                st.markdown(f"{status} Your answer: {answer['selected']}")
-                st.markdown(f"💡 {answer['explanation']}")
-                st.markdown("---")
-        
-        # Reset quiz option
-        if st.button("🔄 Retake Quiz"):
-            del st.session_state[f"quiz_{quiz_name}"]
-            st.experimental_rerun()
+    for feature in upcoming_features:
+        st.markdown(f"• {feature}")
 
 # ----------------------- Main App Structure ----------------------------
 
 def main_app():
     st.title("⚛️ MathCraft: Quantum Quest Enhanced")
-    st.caption("A comprehensive, story-driven introduction to quantum mechanics with AI tutoring — Built by Xavier Honablue M.Ed for CognitiveCloud.ai")
+    st.caption("A comprehensive, story-driven introduction to quantum mechanics with AI tutoring")
 
     # --- Enhanced Sidebar ---
     with st.sidebar:
@@ -2081,11 +1082,7 @@ def main_app():
                 "🧪 Superposition Lab",
                 "⚙️ Quantum Gates Workshop", 
                 "🌍 Bloch Explorer",
-                "🌊 Interference Sandbox",
-                "🎯 Stern–Gerlach Lab",
-                "🔗 Entanglement Workshop",
-                "📊 Quantum Simulator",
-                "🧠 Enhanced Quiz Center",
+                "🧠 Quiz Center",
                 "🎮 Quantum Challenges",
                 "💎 Quantum Shop",
                 "🚀 Future Quest Modules",
@@ -2104,16 +1101,8 @@ def main_app():
         quantum_gates_workshop_enhanced()
     elif page == "🌍 Bloch Explorer":
         bloch_explorer()
-    elif page == "🌊 Interference Sandbox":
-        interference_sandbox()
-    elif page == "🎯 Stern–Gerlach Lab":
-        stern_gerlach_lab()
-    elif page == "🔗 Entanglement Workshop":
-        entanglement_workshop()
-    elif page == "📊 Quantum Simulator":
-        quantum_simulator()
-    elif page == "🧠 Enhanced Quiz Center":
-        enhanced_quiz_center()
+    elif page == "🧠 Quiz Center":
+        run_simple_quiz()
     elif page == "🎮 Quantum Challenges":
         quantum_challenges()
     elif page == "💎 Quantum Shop":
@@ -2123,436 +1112,7 @@ def main_app():
     elif page == "📚 Resources":
         resources_page()
 
-# ----------------------- Enhanced Story Mode ----------------------------
+# ----------------------- Main App Entry Point ----------------------------
 
-def story_mode_enhanced():
-    st.header("Episode 1: The Mysterious Q-Box Enhanced")
-    
-    # Progress tracking
-    if 'story_progress' not in st.session_state:
-        st.session_state.story_progress = {
-            'episode_1_complete': False,
-            'hadamard_mastered': False,
-            'first_measurement': False
-        }
-    
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.markdown("""
-        ### 📖 The Enhanced Discovery
-        
-        In the dusty attic of an old physics laboratory, you discover a peculiar device labeled **Q-BOX 2.0**. 
-        This isn't just any quantum device - it's equipped with an AI tutor and advanced quantum mechanics!
-        
-        A glowing holographic note appears:
-        
-        > *"Welcome, quantum explorer! This enhanced Q-Box will guide you through the mysteries of quantum mechanics.
-        > Complete challenges, earn quantum coins, and unlock the deepest secrets of the quantum realm.
-        > Your AI tutor is standing by to help!"*
-        
-        Your enhanced quantum journey begins now! 🚀
-        """)
-        
-        # Adaptive difficulty based on user level
-        if st.session_state.current_level >= 3:
-            st.info("🎓 **Advanced Mode Unlocked:** More complex states and challenges available!")
-            target_state = st.selectbox(
-                "Choose your target state:",
-                ["Equal Superposition |+⟩", "Minus State |-⟩", "Complex Phase State", "Custom Challenge"]
-            )
-        else:
-            target_state = "Equal Superposition |+⟩"
-        
-        st.markdown(f"### 🎯 Current Mission: Create {target_state}")
-        
-        if target_state == "Equal Superposition |+⟩":
-            st.info("Target: Prepare the state (|0⟩ + |1⟩)/√2 with equal probability of measuring 0 or 1")
-            target_theta = np.pi/2
-            target_phi = 0
-        elif target_state == "Minus State |-⟩":
-            st.info("Target: Prepare the state (|0⟩ - |1⟩)/√2")
-            target_theta = np.pi/2
-            target_phi = np.pi
-        elif target_state == "Complex Phase State":
-            st.info("Target: Prepare the state (|0⟩ + i|1⟩)/√2")
-            target_theta = np.pi/2
-            target_phi = np.pi/2
-        else:
-            st.info("Target: Create any superposition state you choose!")
-            target_theta = None
-            target_phi = None
-        
-        # Enhanced controls with hints
-        col_theta, col_phi = st.columns(2)
-        with col_theta:
-            theta = st.slider("🔄 Rotation around Y-axis (θ)", 0.0, float(np.pi), value=float(np.pi/2), step=0.01)
-            if st.button("💡 Theta Hint"):
-                st.info("θ controls the 'tilt' of your state vector. π/2 creates maximum superposition!")
-        
-        with col_phi:
-            phi = st.slider("🌀 Phase rotation around Z-axis (φ)", 0.0, float(2*np.pi), value=0.0, step=0.01)
-            if st.button("💡 Phi Hint"):
-                st.info("φ adds a phase. Try π for minus states, π/2 for imaginary phases!")
-        
-        state = apply(Ry(theta), ket0())
-        state = apply(Rz(phi), state)
-        probs = measure_probs(state)
-        
-        st.markdown("### Current Quantum State")
-        st.code(f"|ψ⟩ = {cfmt(state[0,0])}|0⟩ + {cfmt(state[1,0])}|1⟩")
-        
-        col_a, col_b = st.columns(2)
-        with col_a:
-            st.metric("P(|0⟩)", f"{probs['0']:.3f}")
-        with col_b:
-            st.metric("P(|1⟩)", f"{probs['1']:.3f}")
-        
-        # Smart measurement suggestions
-        trials = st.number_input("Number of measurements", min_value=10, max_value=1000, value=100, step=10)
-        
-        if st.button("🎲 Run Quantum Measurements", type="primary"):
-            with st.spinner("Measuring quantum state..."):
-                time.sleep(0.5)
-                results = [sample_measure(state) for _ in range(int(trials))]
-                p0_observed = results.count("0") / len(results)
-                p1_observed = 1 - p0_observed
-                
-                st.success(f"📊 Results: |0⟩ → {p0_observed:.3f}, |1⟩ → {p1_observed:.3f}")
-                
-                # Enhanced feedback system
-                success = False
-                if target_state == "Equal Superposition |+⟩":
-                    if abs(p0_observed - 0.5) < 0.1 and abs(p1_observed - 0.5) < 0.1:
-                        success = True
-                elif target_state == "Minus State |-⟩":
-                    if abs(p0_observed - 0.5) < 0.1 and abs(p1_observed - 0.5) < 0.1:
-                        success = True
-                elif target_state == "Complex Phase State":
-                    if abs(p0_observed - 0.5) < 0.1 and abs(p1_observed - 0.5) < 0.1:
-                        success = True
-                else:
-                    success = True  # Custom challenge always succeeds
-                
-                if success:
-                    difficulty = 'easy' if target_state == "Equal Superposition |+⟩" else 'medium'
-                    add_xp_enhanced(25, f"Successfully created {target_state}!", difficulty, True)
-                    
-                    if target_state == "Equal Superposition |+⟩" and "Hadamard Master" not in st.session_state.achievements:
-                        st.session_state.achievements.append("Hadamard Master")
-                        st.balloons()
-                    elif target_state == "Minus State |-⟩" and "Phase Master" not in st.session_state.achievements:
-                        st.session_state.achievements.append("Phase Master")
-                    elif target_state == "Complex Phase State" and "Complex State Master" not in st.session_state.achievements:
-                        st.session_state.achievements.append("Complex State Master")
-                        
-                else:
-                    add_xp_enhanced(8, "Good attempt! Check the AI Tutor for guidance.", 'easy', False)
-    
-    with col2:
-        st.markdown("### 🧠 Enhanced Quantum Concepts")
-        
-        # AI Tutor integration
-        if st.button("🎓 Ask AI Tutor"):
-            show_concept_tutor('superposition')
-        
-        st.markdown("""
-        **Superposition**: A qubit can exist in a combination of |0⟩ and |1⟩ states simultaneously.
-        
-        **Measurement**: Collapses the superposition, giving either |0⟩ or |1⟩ with probabilities |α|² and |β|².
-        
-        **Phase**: The relative phase between states affects interference but not individual measurement probabilities.
-        """)
-        
-        x, y, z = bloch_coords(state)
-        fig = create_bloch_sphere(x, y, z, "Your Qubit State")
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # State analysis
-        st.markdown("### 📊 State Analysis")
-        if abs(probs['0'] - 0.5) < 0.01:
-            st.success("Perfect superposition achieved!")
-        elif abs(probs['0'] - 1) < 0.01:
-            st.info("Pure |0⟩ state")
-        elif abs(probs['1'] - 1) < 0.01:
-            st.info("Pure |1⟩ state")
-        else:
-            st.warning("Mixed superposition state")
-
-# ----------------------- AI Quantum Tutor ----------------------------
-
-def ai_quantum_tutor():
-    st.header("🎓 AI Quantum Tutor")
-    st.markdown("Your personal AI assistant for mastering quantum mechanics!")
-    
-    # Concept selection
-    st.subheader("📚 Choose a Concept to Learn")
-    
-    concepts = ['superposition', 'gates', 'measurement', 'entanglement']
-    concept_names = ['Superposition', 'Quantum Gates', 'Measurement', 'Entanglement']
-    
-    selected_concept = st.selectbox(
-        "What would you like to learn about?",
-        concepts,
-        format_func=lambda x: concept_names[concepts.index(x)]
-    )
-    
-    # Show mastery level
-    mastery = st.session_state.mastery_levels.get(selected_concept, 0)
-    st.markdown(f"**Your current mastery level:** {'⭐' * mastery}{'☆' * (3 - mastery)}")
-    
-    # Interactive tutor
-    show_concept_tutor(selected_concept)
-    
-    # Practice recommendations
-    st.subheader("🎯 Recommended Practice")
-    
-    if mastery == 0:
-        st.info("Start with the basic quizzes and simple lab exercises!")
-        if st.button("Go to Basic Quiz"):
-            st.experimental_set_query_params(page="quiz")
-    elif mastery == 1:
-        st.info("Try intermediate challenges and explore the advanced lab features!")
-    elif mastery == 2:
-        st.info("You're almost there! Tackle the hardest challenges to achieve mastery!")
-    else:
-        st.success("🌟 You've mastered this concept! Help others or explore advanced topics!")
-    
-    # Study plan generator
-    st.subheader("📋 Personalized Study Plan")
-    
-    weak_concepts = [concept for concept, level in st.session_state.mastery_levels.items() if level < 2]
-    strong_concepts = [concept for concept, level in st.session_state.mastery_levels.items() if level >= 2]
-    
-    if weak_concepts:
-        st.markdown("**Focus on these concepts:**")
-        for concept in weak_concepts:
-            level = st.session_state.mastery_levels[concept]
-            st.markdown(f"• {concept.title()}: {'⭐' * level}{'☆' * (3 - level)}")
-    
-    if strong_concepts:
-        st.markdown("**You've mastered:**")
-        for concept in strong_concepts:
-            st.markdown(f"• {concept.title()}: ⭐⭐⭐")
-
-# ----------------------- Enhanced Lab Modules ----------------------------
-
-def superposition_lab_enhanced():
-    st.header("🧪 Enhanced Superposition Laboratory")
-    st.markdown("Craft custom quantum states with AI guidance and advanced features")
-    
-    # Lab mode selection
-    lab_mode = st.radio(
-        "Choose lab mode:",
-        ["🌱 Guided Mode", "🔬 Free Exploration", "🎯 Challenge Mode"],
-        horizontal=True
-    )
-    
-    col1, col2 = st.columns([3, 2])
-    
-    with col1:
-        if lab_mode == "🌱 Guided Mode":
-            st.subheader("AI-Guided State Design")
-            st.info("Follow the AI tutor's guidance to create specific quantum states!")
-            
-            target = st.selectbox(
-                "Choose a target state to create:",
-                ["Equal superposition", "75% |0⟩ state", "Complex phase state", "Custom state"]
-            )
-            
-            if target == "Equal superposition":
-                st.markdown("**Goal:** Create |+⟩ = (|0⟩ + |1⟩)/√2")
-                st.markdown("**Hint:** Set both amplitudes to 1/√2 ≈ 0.707")
-            elif target == "75% |0⟩ state":
-                st.markdown("**Goal:** Create a state with 75% probability of measuring |0⟩")
-                st.markdown("**Hint:** |α|² = 0.75, so α ≈ 0.866")
-            elif target == "Complex phase state":
-                st.markdown("**Goal:** Create (|0⟩ + i|1⟩)/√2")
-                st.markdown("**Hint:** Use imaginary amplitude for |1⟩")
-        
-        elif lab_mode == "🎯 Challenge Mode":
-            st.subheader("Superposition Challenges")
-            
-            challenges = [
-                {"name": "Perfect Balance", "description": "Create exactly 50/50 probability", "target_p0": 0.5},
-                {"name": "Golden Ratio", "description": "P(|0⟩) = 0.618 (golden ratio)", "target_p0": 0.618},
-                {"name": "Quantum Third", "description": "P(|0⟩) = 1/3", "target_p0": 0.333}
-            ]
-            
-            selected_challenge = st.selectbox("Choose a challenge:", challenges, format_func=lambda x: x['name'])
-            st.markdown(f"**Challenge:** {selected_challenge['description']}")
-        
-        # State designer (common to all modes)
-        st.subheader("State Designer")
-        
-        if lab_mode != "🎯 Challenge Mode":
-            st.markdown("**α coefficient (for |0⟩):**")
-            col_a1, col_a2 = st.columns(2)
-            with col_a1:
-                a_real = st.slider("Real(α)", -1.0, 1.0, 1.0, 0.01)
-            with col_a2:
-                a_imag = st.slider("Imag(α)", -1.0, 1.0, 0.0, 0.01)
-            
-            st.markdown("**β coefficient (for |1⟩):**")
-            col_b1, col_b2 = st.columns(2)
-            with col_b1:
-                b_real = st.slider("Real(β)", -1.0, 1.0, 0.0, 0.01)
-            with col_b2:
-                b_imag = st.slider("Imag(β)", -1.0, 1.0, 0.0, 0.01)
-        else:
-            # Challenge mode - let user try to hit target
-            magnitude_0 = st.slider("Magnitude of α (for |0⟩)", 0.0, 1.0, 0.707, 0.001)
-            phase_0 = st.slider("Phase of α (radians)", 0.0, 2*np.pi, 0.0, 0.01)
-            
-            # Calculate β to maintain normalization
-            magnitude_1 = np.sqrt(1 - magnitude_0**2)
-            phase_1 = st.slider("Phase of β (radians)", 0.0, 2*np.pi, 0.0, 0.01)
-            
-            a_real = magnitude_0 * np.cos(phase_0)
-            a_imag = magnitude_0 * np.sin(phase_0)
-            b_real = magnitude_1 * np.cos(phase_1)
-            b_imag = magnitude_1 * np.sin(phase_1)
-        
-        psi = np.array([[a_real + 1j*a_imag], [b_real + 1j*b_imag]], dtype=complex)
-        psi = normalize(psi)
-        
-        st.markdown("### Normalized Quantum State")
-        st.code(f"|ψ⟩ = {cfmt(psi[0,0])}|0⟩ + {cfmt(psi[1,0])}|1⟩")
-        
-        probs = measure_probs(psi)
-        col_p1, col_p2 = st.columns(2)
-        with col_p1:
-            st.metric("P(|0⟩)", f"{probs['0']:.4f}")
-        with col_p2:
-            st.metric("P(|1⟩)", f"{probs['1']:.4f}")
-        
-        # Challenge checking
-        if lab_mode == "🎯 Challenge Mode":
-            target_prob = selected_challenge['target_p0']
-            error = abs(probs['0'] - target_prob)
-            
-            if error < 0.01:
-                st.success("🎉 Challenge completed! Perfect accuracy!")
-                add_xp_enhanced(30, f"Completed {selected_challenge['name']} challenge!", 'medium', True)
-            elif error < 0.05:
-                st.info(f"Close! Error: {error:.3f}")
-            else:
-                st.warning(f"Keep trying! Error: {error:.3f}")
-        
-        # Enhanced measurement system
-        nshots = st.number_input("Number of measurements", 10, 2000, 500, 50)
-        
-        if st.button("🎲 Perform Measurements", type="primary"):
-            with st.spinner("Running quantum measurements..."):
-                results = [sample_measure(psi) for _ in range(int(nshots))]
-                df = pd.DataFrame({'Outcome': results})
-                counts = df['Outcome'].value_counts(normalize=True).sort_index()
-                
-                fig_hist = px.bar(
-                    x=counts.index,
-                    y=counts.values,
-                    labels={'x': 'Measurement Outcome', 'y': 'Probability'},
-                    title="Measurement Results"
-                )
-                fig_hist.update_traces(marker_color=['lightblue', 'lightcoral'])
-                st.plotly_chart(fig_hist, use_container_width=True)
-                
-                add_xp_enhanced(12, "Superposition experiment completed!", 'easy', True)
-    
-    with col2:
-        st.subheader("Visualization")
-        x, y, z = bloch_coords(psi)
-        fig = create_bloch_sphere(x, y, z)
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # State information panel
-        st.subheader("📊 State Analysis")
-        st.markdown(f"**Bloch coordinates:** ({x:.3f}, {y:.3f}, {z:.3f})")
-        
-        # Classify the state
-        if abs(z - 1) < 0.01:
-            st.info("🔵 Pure |0⟩ state")
-        elif abs(z + 1) < 0.01:
-            st.info("🔴 Pure |1⟩ state")
-        elif abs(z) < 0.01:
-            st.info("🟡 Equatorial state (maximum superposition)")
-        else:
-            st.info("🟣 General superposition state")
-
-def quantum_gates_workshop_enhanced():
-    st.header("⚙️ Enhanced Quantum Gates Workshop")
-    st.markdown("Master quantum gates with interactive tutorials and advanced challenges")
-    
-    # Workshop mode
-    workshop_mode = st.radio(
-        "Choose workshop mode:",
-        ["📚 Tutorial Mode", "🔧 Circuit Builder", "🏆 Gate Challenges"],
-        horizontal=True
-    )
-    
-    if workshop_mode == "📚 Tutorial Mode":
-        st.subheader("Interactive Gate Tutorial")
-        
-        gate_tutorial = st.selectbox(
-            "Select a gate to learn:",
-            ["Pauli-X (NOT)", "Hadamard", "Pauli-Z", "Rotation Gates", "CNOT"]
-        )
-        
-        if gate_tutorial == "Pauli-X (NOT)":
-            st.markdown("""
-            ### 🔄 Pauli-X Gate (Quantum NOT)
-            
-            The X gate flips the qubit state: |0⟩ → |1⟩ and |1⟩ → |0⟩
-            
-            **Matrix representation:**
-            ```
-            X = [0  1]
-                [1  0]
-            ```
-            """)
-            
-            st.markdown("**Try it yourself:**")
-            initial = st.selectbox("Starting state:", ["|0⟩", "|1⟩", "Superposition"])
-            
-            if initial == "|0⟩":
-                state = ket0()
-                st.code("Initial: |0⟩")
-            elif initial == "|1⟩":
-                state = ket1()
-                st.code("Initial: |1⟩")
-            else:
-                state = apply(H, ket0())
-                st.code("Initial: |+⟩ = (|0⟩ + |1⟩)/√2")
-            
-            if st.button("Apply X Gate"):
-                final_state = apply(X, state)
-                st.code(f"Final: {cfmt(final_state[0,0])}|0⟩ + {cfmt(final_state[1,0])}|1⟩")
-                add_xp_enhanced(8, "Applied X gate successfully!", 'easy', True)
-    
-    elif workshop_mode == "🏆 Gate Challenges":
-        st.subheader("Gate Mastery Challenges")
-        
-        challenges = [
-            {
-                "name": "NOT Twice",
-                "description": "Apply X gate twice to |0⟩. What do you get?",
-                "initial_state": "|0⟩",
-                "gates": ["X", "X"],
-                "expected": "|0⟩"
-            },
-            {
-                "name": "Create |1⟩",
-                "description": "Transform |0⟩ to |1⟩ using any single gate",
-                "initial_state": "|0⟩",
-                "gates": ["?"],
-                "expected": "|1⟩"
-            },
-            {
-                "name": "Superposition Creation",
-                "description": "Create equal superposition from |0⟩",
-                "initial_state": "|0⟩",
-                "gates": ["?"],
-                "expected": "|+⟩"
-            }
-        ]
-        
-        selected_
+if __name__ == '__main__':
+    main_app()
